@@ -1,0 +1,28 @@
+# Dependency directories
+node_modules/
+stream-proxy/node_modules/
+
+# Local configuration & credentials
+config/config.json
+.env
+
+# Cache and temporary directories
+cache/*
+!cache/.gitkeep
+storage/*
+!storage/.gitkeep
+
+# System files
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+.DS_Store
+
+# IDEs and editors
+.vscode/
+.idea/
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.swp

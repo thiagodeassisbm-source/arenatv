@@ -1,0 +1,70 @@
+==========================================================================
+ARENA STREAM - SISTEMA DE VENDA DE CANAIS E JOGOS DE FUTEBOL (PHP & JS)
+==========================================================================
+
+Parabéns! A primeira parte do seu sistema premium foi desenvolvida com sucesso. 
+O layout está incrível, seguindo a paleta de cores solicitada: Preto, Roxo e Vermelho 
+com um estilo visual moderno (Glassmorphism e Glow Neons).
+
+Abaixo estão as instruções para colocar o sistema para rodar localmente e depois subir para a Hostinger.
+
+--------------------------------------------------------------------------
+1. COMO RODAR LOCALMENTE (SERVIDOR DO PRÓPRIO PHP — SEM HTDOCS)
+--------------------------------------------------------------------------
+O projeto fica onde está no disco. Não é preciso copiar nada para C:\xampp\htdocs.
+
+A) No XAMPP (ou Laragon), inicie APENAS o MySQL. O Apache não é necessário.
+
+B) Dê duplo clique em `iniciar.bat` na pasta do projeto
+   (ou no terminal, dentro da pasta: php -S 127.0.0.1:8000)
+
+C) Abra no navegador: http://127.0.0.1:8000
+
+D) CONEXÃO AUTOMÁTICA COM O BANCO:
+   - O `config/db.php` conecta ao MySQL local (usuário root, sem senha).
+   - Se o banco `venda_canais` não existir, o PHP CRIA e importa o `database.sql` na primeira vez.
+   - Erros de conexão aparecem em uma tela roxo/vermelha com instruções.
+
+E) Importação manual (opcional), se preferir o phpMyAdmin:
+   1. Inicie o Apache no XAMPP só para usar o phpMyAdmin, ou use outro cliente MySQL.
+   2. Crie o banco `venda_canais` (utf8mb4_unicode_ci) e importe `database.sql`.
+
+--------------------------------------------------------------------------
+2. FUNCIONALIDADES DO PAINEL DE CONTROLE (SPA - RÁPIDO E FLUIDO)
+--------------------------------------------------------------------------
+- PAINEL GERAL (Dashboard): Exibe estatísticas em tempo real (Total de Canais, Canais Esportivos, Jogos à Venda) e o fluxo passo a passo.
+- IMPORTAR LISTA M3U: Permite colar a URL da lista M3U comprada ou arrastar/fazer upload do arquivo .m3u diretamente.
+  * O sistema lê linha a linha, extrai nome do canal, logotipo (tvg-logo), grupo/categoria (group-title) e a URL da transmissão.
+  * Faz um pré-filtro automático de canais de esporte na hora da importação!
+- GERENCIAR CANAIS: Lista todos os canais importados de forma paginada com barra de pesquisa fluida.
+  * Você pode marcar ou desmarcar qualquer canal como "Esportivo" clicando na chave seletora estilizada (Switch Toggle).
+  * Possui o botão "Auto-Filtrar Esportivos", que varre toda a lista por inteligência de palavras-chave (ESPN, SporTV, Premiere, Combate, etc.) marcando-os em lote em segundos.
+- VENDER JOGOS: Formulário premium para cadastrar os jogos.
+  * O select de canais exibe APENAS os canais que você separou como esportivos.
+  * Você digita o nome do jogo, descrição, preço de venda (ou 0,00 para gratuito) e o link externo de pagamento (Mercado Pago, Stripe, etc).
+  * À direita, os jogos aparecem em forma de ingressos estilizados (com visual de bilhete de futebol), onde você pode editar, excluir ou copiar o link de transmissão/venda do jogo.
+
+--------------------------------------------------------------------------
+3. PÁGINA DO CLIENTE FINAL (COMPRA E STREAM)
+--------------------------------------------------------------------------
+- Ao cadastrar um jogo e clicar no botão "Copiar Link" no painel, o sistema gera o link do jogo:
+  `http://127.0.0.1:8000/assistir.php?jogo=ID`
+- Se o jogo for PAGO (Preço > 0,00): O cliente verá um bilhete premium de futebol informando os dados do jogo, preço e um botão brilhante para "Adquirir Acesso". O player de vídeo fica bloqueado (Paywall).
+- Se o jogo for GRATUITO (Preço = 0,00) ou liberado: O cliente assiste à transmissão diretamente.
+- Possui um SIMULADOR DE CHAT DA TORCIDA EM TEMPO REAL. A torcida fica comentando o jogo dinamicamente (comentários sobre lances, gols, etc.) e o cliente também pode digitar e interagir! Isso eleva a experiência a nível profissional.
+
+--------------------------------------------------------------------------
+4. COMO SUBIR PARA A HOSTINGER (QUANDO ESTIVER TUDO PRONTO)
+--------------------------------------------------------------------------
+Quando terminarmos e você desejar subir para o ar na Hostinger:
+1. No painel da Hostinger, crie um Banco de Dados MySQL e anote as credenciais (Host, Nome do Banco, Usuário e Senha).
+2. Acesse o phpMyAdmin da Hostinger, selecione o banco criado e importe o mesmo arquivo `database.sql`.
+3. Abra o arquivo `config/db.php` do seu projeto e substitua as definições locais pelas credenciais da Hostinger:
+   `define('DB_HOST', 'seu_host_hostinger');`
+   `define('DB_USER', 'seu_usuario_hostinger');`
+   `define('DB_PASS', 'sua_senha_hostinger');`
+   `define('DB_NAME', 'seu_banco_hostinger');`
+4. Envie todos os arquivos do sistema para a pasta pública (geralmente `public_html`) usando o Gerenciador de Arquivos da Hostinger ou cliente FTP.
+
+Pronto! O sistema estará rodando na nuvem com a mesma performance e beleza do local.
+==========================================================================

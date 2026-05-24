@@ -1,0 +1,26 @@
+==========================================================================
+ARENA STREAM — COMO USAR (SEM XAMPP / SEM MYSQL)
+==========================================================================
+
+O sistema agora usa SQLite localmente.
+Arquivo do banco: storage\venda_canais.sqlite
+NAO precisa de XAMPP, MySQL nem phpMyAdmin para rodar.
+
+--------------------------------------------------------------------------
+PASSO ÚNICO
+--------------------------------------------------------------------------
+1. Duplo clique em:  iniciar.bat
+2. Deixe a janela aberta
+3. Acesse: http://127.0.0.1:8000
+
+Pronto. O banco é criado automaticamente na primeira vez.
+
+--------------------------------------------------------------------------
+HOSTINGER (quando for publicar)
+--------------------------------------------------------------------------
+1. Renomeie config/local.php.example para config/local.php
+2. Defina: define('DB_USE_SQLITE', false);
+3. Configure DB_HOST, DB_USER, DB_PASS, DB_NAME em config/db.php
+4. Importe database.sql no phpMyAdmin da Hostinger
+
+==========================================================================

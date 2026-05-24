@@ -1,0 +1,11 @@
+<?php
+/**
+ * HOSTINGER / PRODUÇÃO — renomeie para local.php e ajuste:
+ */
+define('DB_USE_SQLITE', false);
+
+// Credenciais MySQL da Hostinger (edite também config/db.php se preferir):
+// define('DB_HOST', 'seu_host');
+// define('DB_USER', 'seu_usuario');
+// define('DB_PASS', 'sua_senha');
+// define('DB_NAME', 'seu_banco');
