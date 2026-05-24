@@ -1,4 +1,7 @@
 <?php
+// Garantir fuso horário padrão do Brasil para todas as páginas e APIs
+date_default_timezone_set('America/Sao_Paulo');
+
 /**
  * Conexão com banco de dados.
  * Local: SQLite (automático, sem XAMPP).
