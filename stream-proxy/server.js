@@ -130,9 +130,17 @@ function rewriteM3u8(body, baseUrl, channelId, tParam) {
                 const abs = new URL(trim, base).href;
                 const enc = encodeURIComponent(Buffer.from(abs).toString('base64'));
                 
-                // CRÍTICO: Se a linha for um segmento de vídeo (.ts, .mp4, m4s, aac, mp3), NÃO adiciona format=hls
-                if (/\.(ts|mp4|m4s|aac|mp3)(\?|$)/i.test(trim) || trim.includes('/ts')) {
-                    return `http://127.0.0.1:${PORT}/stream?id=${channelId}&t=${enc}&type=mpegts`;
+                // Correção de Detecção Robusta: Identifica se o link é um segmento ou fluxo de vídeo contínuo
+                const isVideoSegment = /\.(ts|mp4|m4s|aac|mp3|m4a)(\?|$)/i.test(trim) || 
+                                       trim.includes('/ts') || 
+                                       trim.includes('/live/') || 
+                                       trim.includes('/play/');
+
+                if (isVideoSegment) {
+                    if (channelId) {
+                        return `http://127.0.0.1:${PORT}/stream?id=${channelId}&t=${enc}&type=mpegts`;
+                    }
+                    return `http://127.0.0.1:${PORT}/stream?t=${enc}&type=mpegts`;
                 }
                 
                 if (channelId) {
