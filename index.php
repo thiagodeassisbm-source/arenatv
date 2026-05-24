@@ -144,9 +144,11 @@ $channels = $pdo->query($sqlChannels)->fetchAll(PDO::FETCH_ASSOC);
             justify-content: flex-start;
             min-height: 580px;
             position: relative;
-            background: radial-gradient(circle at 75% 40%, rgba(30, 80, 110, 0.45) 0%, rgba(10, 6, 21, 0) 65%),
-                        radial-gradient(circle at 20% 50%, rgba(124, 58, 237, 0.15) 0%, rgba(10, 6, 21, 0) 70%),
-                        linear-gradient(180deg, #09121e 0%, var(--bg-dark) 100%);
+            background-image: linear-gradient(to right, #09121e 20%, rgba(9, 18, 30, 0.85) 45%, rgba(9, 18, 30, 0.3) 65%, rgba(9, 18, 30, 0.95) 100%),
+                              url('assets/images/football_stars_hero.png');
+            background-size: cover;
+            background-position: right center;
+            background-repeat: no-repeat;
             border-bottom: 1px solid rgba(255, 255, 255, 0.05);
             overflow: hidden;
         }
@@ -244,35 +246,7 @@ $channels = $pdo->query($sqlChannels)->fetchAll(PDO::FETCH_ASSOC);
             color: #fff;
         }
 
-        .hero-banner-image {
-            position: absolute;
-            top: 0;
-            right: 0;
-            width: 55%;
-            height: 100%;
-            z-index: 1;
-            display: flex;
-            justify-content: flex-end;
-            align-items: flex-end;
-            overflow: hidden;
-        }
 
-        .hero-banner-image img {
-            height: 100%;
-            width: auto;
-            object-fit: cover;
-            border-radius: 0;
-            mask-image: linear-gradient(to left, rgba(0,0,0,1) 80%, rgba(0,0,0,0) 100%);
-            -webkit-mask-image: linear-gradient(to left, rgba(0,0,0,1) 80%, rgba(0,0,0,0) 100%);
-            filter: drop-shadow(0 0 50px rgba(0, 0, 0, 0.5));
-            animation: floatImage 6s ease-in-out infinite;
-        }
-
-        @keyframes floatImage {
-            0% { transform: translateY(0px); }
-            50% { transform: translateY(-12px); }
-            100% { transform: translateY(0px); }
-        }
 
         /* Carrossel de Ligas Premium */
         .leagues-container {
@@ -346,8 +320,11 @@ $channels = $pdo->query($sqlChannels)->fetchAll(PDO::FETCH_ASSOC);
                 flex-direction: column;
                 text-align: center;
                 gap: 40px;
-                padding: 40px 20px !important;
+                padding: 120px 20px 60px !important;
                 width: 100% !important;
+                background-image: linear-gradient(180deg, rgba(9, 18, 30, 0.95) 0%, rgba(9, 18, 30, 0.75) 50%, #09121e 100%),
+                                  url('assets/images/football_stars_hero.png');
+                background-position: center center;
             }
 
             .hero-banner-content {
@@ -363,16 +340,6 @@ $channels = $pdo->query($sqlChannels)->fetchAll(PDO::FETCH_ASSOC);
 
             .hero-actions {
                 justify-content: center;
-            }
-
-            .hero-banner-image {
-                justify-content: center;
-            }
-
-            .hero-banner-image img {
-                max-width: 340px;
-                mask-image: linear-gradient(to bottom, rgba(0,0,0,1) 75%, rgba(0,0,0,0) 100%);
-                -webkit-mask-image: linear-gradient(to bottom, rgba(0,0,0,1) 75%, rgba(0,0,0,0) 100%);
             }
         }
 
@@ -803,10 +770,6 @@ $channels = $pdo->query($sqlChannels)->fetchAll(PDO::FETCH_ASSOC);
         <a href="index.php" class="brand">
             <img src="assets/images/logo.png" alt="Arena Esportiva" style="height: 150px; width: auto; object-fit: contain;">
         </a>
-        
-        <a href="admin.php" class="btn-admin">
-            <i class="fa-solid fa-user-gear"></i> Painel Admin
-        </a>
     </header>
 
     <!-- Hero Banner Premium -->
@@ -821,13 +784,7 @@ $channels = $pdo->query($sqlChannels)->fetchAll(PDO::FETCH_ASSOC);
                 <button onclick="scrollToGames()" class="btn-hero-primary">
                     <i class="fa-solid fa-circle-play"></i> Assistir Agora
                 </button>
-                <a href="admin.php" class="btn-hero-secondary">
-                    <i class="fa-solid fa-user-gear"></i> Painel Admin
-                </a>
             </div>
-        </div>
-        <div class="hero-banner-image">
-            <img src="assets/images/football_stars_hero.png" alt="Craques do Futebol">
         </div>
     </section>
 
