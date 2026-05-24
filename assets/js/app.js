@@ -836,6 +836,18 @@ window.fetchGames = function() {
     });
 };
 
+function formatDateTime(isoString) {
+    if (!isoString) return '';
+    try {
+        const d = new Date(isoString.replace(' ', 'T'));
+        if (isNaN(d.getTime())) return isoString;
+        const pad = (n) => String(n).padStart(2, '0');
+        return `${pad(d.getDate())}/${pad(d.getMonth()+1)} às ${pad(d.getHours())}:${pad(d.getMinutes())}`;
+    } catch (e) {
+        return isoString;
+    }
+}
+
 function renderGamesList(gamesList) {
     const container = document.getElementById('games-list-container');
     if (!container) return;
@@ -866,6 +878,10 @@ function renderGamesList(gamesList) {
             `R$ ${parseFloat(game.price).toFixed(2).replace('.', ',')}` : 
             'GRÁTIS';
 
+        const dateHtml = game.game_date ? 
+            `<div class="game-ticket-date" style="font-size: 11px; color: var(--color-purple-light); font-weight: 700; margin-bottom: 8px; display: flex; align-items: center; gap: 6px;"><i class="fa-solid fa-calendar-days"></i> ${formatDateTime(game.game_date)}</div>` : 
+            '';
+
         ticket.innerHTML = `
             <div class="game-ticket-main">
                 <div class="game-ticket-channel">
@@ -875,6 +891,7 @@ function renderGamesList(gamesList) {
                     <span class="game-channel-name">${game.channel_name || 'Canal Desconhecido'}</span>
                 </div>
                 <div class="game-ticket-title" title="${game.name}">${game.name}</div>
+                ${dateHtml}
                 <div class="game-ticket-desc">${game.description}</div>
                 <div class="game-ticket-footer">
                     <span class="game-price-tag">${formattedPrice}</span>
@@ -991,6 +1008,7 @@ window.editGame = function(id) {
     document.getElementById('game_name').value = game.name;
     document.getElementById('game_description').value = game.description;
     document.getElementById('game_channel_id').value = game.channel_id;
+    document.getElementById('game_date').value = game.game_date ? game.game_date.replace(' ', 'T').substring(0, 16) : '';
     
     // Formatar preço para o form
     const priceStr = parseFloat(game.price).toFixed(2).replace('.', ',');

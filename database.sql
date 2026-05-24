@@ -32,6 +32,7 @@ CREATE TABLE IF NOT EXISTS `games` (
   `name` VARCHAR(255) NOT NULL,
   `description` TEXT NULL,
   `channel_id` INT NULL,
+  `game_date` DATETIME NULL,
   `price` DECIMAL(10, 2) DEFAULT 0.00,
   `status` VARCHAR(50) DEFAULT 'ativo',
   `external_link` VARCHAR(500) NULL,

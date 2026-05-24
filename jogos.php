@@ -644,6 +644,19 @@ $channels = $pdo->query($sqlChannels)->fetchAll(PDO::FETCH_ASSOC);
                             
                             <div class="ticket-body">
                                 <h3 class="match-title"><?php echo htmlspecialchars($game['name']); ?></h3>
+                                <?php if (!empty($game['game_date'])): ?>
+                                    <?php 
+                                        try {
+                                            $date = new DateTime($game['game_date']);
+                                            $formattedDate = $date->format('d/m') . ' às ' . $date->format('H:i');
+                                        } catch (Exception $e) {
+                                            $formattedDate = htmlspecialchars($game['game_date']);
+                                        }
+                                    ?>
+                                    <div class="game-ticket-date" style="font-size: 11px; color: var(--color-purple-light); font-weight: 700; margin-bottom: 8px; display: flex; align-items: center; justify-content: center; gap: 6px;">
+                                        <i class="fa-solid fa-calendar-days"></i> <?php echo $formattedDate; ?>
+                                    </div>
+                                <?php endif; ?>
                                 <p class="match-desc"><?php echo nl2br(htmlspecialchars($game['description'])); ?></p>
                             </div>
                             

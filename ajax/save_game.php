@@ -17,6 +17,7 @@ try {
     
     $status = isset($_POST['status']) ? trim($_POST['status']) : 'ativo';
     $external_link = isset($_POST['external_link']) ? trim($_POST['external_link']) : '';
+    $game_date = isset($_POST['game_date']) && $_POST['game_date'] !== '' ? trim($_POST['game_date']) : null;
 
     // Validação básica
     if (empty($name)) {
@@ -39,13 +40,13 @@ try {
 
     if ($id > 0) {
         // Modo Edição
-        $stmt = $pdo->prepare("UPDATE games SET name = ?, description = ?, channel_id = ?, price = ?, status = ?, external_link = ? WHERE id = ?");
-        $stmt->execute([$name, $description, $channel_id, $price, $status, $external_link, $id]);
+        $stmt = $pdo->prepare("UPDATE games SET name = ?, description = ?, channel_id = ?, game_date = ?, price = ?, status = ?, external_link = ? WHERE id = ?");
+        $stmt->execute([$name, $description, $channel_id, $game_date, $price, $status, $external_link, $id]);
         $message = "Jogo editado com sucesso!";
     } else {
         // Modo Criação
-        $stmt = $pdo->prepare("INSERT INTO games (name, description, channel_id, price, status, external_link) VALUES (?, ?, ?, ?, ?, ?)");
-        $stmt->execute([$name, $description, $channel_id, $price, $status, $external_link]);
+        $stmt = $pdo->prepare("INSERT INTO games (name, description, channel_id, game_date, price, status, external_link) VALUES (?, ?, ?, ?, ?, ?, ?)");
+        $stmt->execute([$name, $description, $channel_id, $game_date, $price, $status, $external_link]);
         $id = $pdo->lastInsertId();
         $message = "Jogo cadastrado para venda com sucesso!";
     }

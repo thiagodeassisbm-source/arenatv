@@ -240,7 +240,13 @@ require_once __DIR__ . '/includes/header.php';
 
                     <div class="form-group">
                         <label class="form-label" for="game_description">Descrição / Informações *</label>
-                        <textarea id="game_description" name="description" class="form-control" placeholder="Ex: Campeonato Brasileiro - Rodada 10 - Sábado às 21h" required></textarea>
+                        <textarea id="game_description" name="description" class="form-control" placeholder="Ex: Campeonato Brasileiro - Rodada 10" required></textarea>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label" for="game_date">Data e Hora do Jogo *</label>
+                        <input type="datetime-local" id="game_date" name="game_date" class="form-control" required>
+                        <p style="font-size: 11px; color: var(--text-secondary); margin-top: 6px;">Escolha o dia e o horário em que a transmissão começará.</p>
                     </div>
 
                     <div class="form-group">
@@ -732,6 +738,19 @@ require_once __DIR__ . '/includes/header.php';
                             
                             <div class="ticket-body-integrated">
                                 <h3 class="match-title-integrated"><?php echo htmlspecialchars($game['name']); ?></h3>
+                                <?php if (!empty($game['game_date'])): ?>
+                                    <?php 
+                                        try {
+                                            $date = new DateTime($game['game_date']);
+                                            $formattedDate = $date->format('d/m') . ' às ' . $date->format('H:i');
+                                        } catch (Exception $e) {
+                                            $formattedDate = htmlspecialchars($game['game_date']);
+                                        }
+                                    ?>
+                                    <div class="game-ticket-date-integrated" style="font-size: 11px; color: var(--color-purple-light); font-weight: 700; margin-bottom: 8px; display: flex; align-items: center; justify-content: center; gap: 6px;">
+                                        <i class="fa-solid fa-calendar-days"></i> <?php echo $formattedDate; ?>
+                                    </div>
+                                <?php endif; ?>
                                 <p class="match-desc-integrated"><?php echo nl2br(htmlspecialchars($game['description'])); ?></p>
                             </div>
                             
