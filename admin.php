@@ -253,17 +253,16 @@ require_once __DIR__ . '/includes/header.php';
                         <p style="font-size: 11px; color: var(--text-secondary); margin-top: 6px;">Escolha o dia e o horário em que o jogo ocorrerá.</p>
                     </div>
 
-                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 20px;">
-                        <div class="form-group" style="margin-bottom: 0;">
-                            <label class="form-label" for="transmission_start">Liberar Transmissão *</label>
-                            <input type="datetime-local" id="transmission_start" name="transmission_start" class="form-control" required>
-                            <p style="font-size: 10px; color: var(--text-secondary); margin-top: 4px;">Horário em que o play fica ativo.</p>
-                        </div>
-                        <div class="form-group" style="margin-bottom: 0;">
-                            <label class="form-label" for="transmission_end">Bloquear Transmissão *</label>
-                            <input type="datetime-local" id="transmission_end" name="transmission_end" class="form-control" required>
-                            <p style="font-size: 10px; color: var(--text-secondary); margin-top: 4px;">Horário em que o player bloqueia.</p>
-                        </div>
+                    <div class="form-group">
+                        <label class="form-label" for="transmission_start">Liberar Transmissão *</label>
+                        <input type="datetime-local" id="transmission_start" name="transmission_start" class="form-control" required>
+                        <p style="font-size: 11px; color: var(--text-secondary); margin-top: 6px;">Horário em que o play fica ativo.</p>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label" for="transmission_end">Bloquear Transmissão *</label>
+                        <input type="datetime-local" id="transmission_end" name="transmission_end" class="form-control" required>
+                        <p style="font-size: 11px; color: var(--text-secondary); margin-top: 6px;">Horário em que o player bloqueia.</p>
                     </div>
 
                     <div class="form-group">
