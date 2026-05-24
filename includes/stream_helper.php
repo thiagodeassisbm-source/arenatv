@@ -91,11 +91,11 @@ function arenaFetchUrl(string $url, int $maxBytes = 0, bool $headOnly = false, b
     $ch = curl_init($url);
     $opts = arenaStreamCurlOpts($url);
     $opts[CURLOPT_URL] = $url;
-    $opts[CURLOPT_RETURNTRANSFER] = false;
-    $opts[CURLOPT_HEADER] = false;
+    $opts[CURLOPT_RETURNTRANSFER] = true;
+    $opts[CURLOPT_HEADER] = true;
 
     if ($maxBytes === 0 && !$headOnly) {
-        $maxBytes = 300000; // ~300 KB limit
+        $maxBytes = 300000; // Teto de segurança para evitar travar em vídeo contínuo
     }
 
     if ($headOnly) {
@@ -104,41 +104,37 @@ function arenaFetchUrl(string $url, int $maxBytes = 0, bool $headOnly = false, b
         $opts[CURLOPT_RANGE] = '0-' . ($maxBytes - 1);
     }
 
-    $body = '';
-    $headersRaw = '';
+    curl_setopt_array($ch, $opts);
 
-    $opts[CURLOPT_HEADERFUNCTION] = static function ($ch, string $headerLine) use (&$headersRaw) {
-        $headersRaw .= $headerLine;
-        return strlen($headerLine);
-    };
-
-    if (!$headOnly) {
-        $opts[CURLOPT_WRITEFUNCTION] = static function ($ch, string $chunk) use (&$body, $maxBytes) {
-            $body .= $chunk;
-            if ($maxBytes > 0 && strlen($body) >= $maxBytes) {
-                return 0; // Abort download once maxBytes is reached
+    if ($maxBytes > 0) {
+        curl_setopt($ch, CURLOPT_NOPROGRESS, false);
+        curl_setopt($ch, CURLOPT_PROGRESSFUNCTION, static function($ch, $downloadSize, $downloaded) use ($maxBytes) {
+            if ($downloaded > $maxBytes) {
+                return 1; // Aborta o download de vídeo imediatamente para proteger a memória
             }
-            return strlen($chunk);
-        };
+            return 0;
+        });
     }
 
-    curl_setopt_array($ch, $opts);
-    $ok = curl_exec($ch);
+    $raw = curl_exec($ch);
     $err = curl_error($ch);
     $info = curl_getinfo($ch);
     curl_close($ch);
 
-    if ($ok === false && !empty($body)) {
-        $ok = true;
-    }
-
-    if ($ok === false) {
+    if ($raw === false && !str_contains($err, 'progress')) {
         return ['ok' => false, 'error' => $err ?: 'Falha ao conectar', 'body' => '', 'info' => $info];
     }
+    if ($raw === false) {
+        $raw = '';
+    }
+
+    $headerSize = (int)($info['header_size'] ?? 0);
+    $headersRaw = substr($raw, 0, $headerSize);
+    $bodyPart = substr($raw, $headerSize);
 
     return [
         'ok' => true,
-        'body' => $body,
+        'body' => $bodyPart,
         'headers' => $headersRaw,
         'info' => $info,
         'final_url' => $info['url'] ?? $url,
