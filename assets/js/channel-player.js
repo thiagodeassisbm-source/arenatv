@@ -38,10 +38,7 @@
     }
 
     function playMp4(video, url, onOk, onFail) {
-        const source = document.createElement('source');
-        source.src = url;
-        source.type = 'video/mp4';
-        video.appendChild(source);
+        video.src = url;
         video.load();
         const ok = () => {
             if (playing) return;
@@ -136,7 +133,7 @@
             const onFailAll = callbacks.onFailed || function () {};
             const onTrying = callbacks.onTrying || function () {};
             let index = 0;
-            const timeoutMs = 2500;
+            const timeoutMs = 6000;
 
             function next() {
                 clearTryTimer();
