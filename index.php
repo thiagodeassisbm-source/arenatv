@@ -144,11 +144,11 @@ $channels = $pdo->query($sqlChannels)->fetchAll(PDO::FETCH_ASSOC);
         .hero-banner {
             width: 100vw;
             margin: 0;
-            padding: 140px 8% 60px;
+            padding: 180px 8% 80px;
             display: flex;
             align-items: center;
-            justify-content: space-between;
-            gap: 50px;
+            justify-content: flex-start;
+            min-height: 580px;
             position: relative;
             background: radial-gradient(circle at 75% 40%, rgba(30, 80, 110, 0.45) 0%, rgba(10, 6, 21, 0) 65%),
                         radial-gradient(circle at 20% 50%, rgba(124, 58, 237, 0.15) 0%, rgba(10, 6, 21, 0) 70%),
@@ -164,10 +164,12 @@ $channels = $pdo->query($sqlChannels)->fetchAll(PDO::FETCH_ASSOC);
         }
 
         .hero-banner-content {
-            flex: 1.2;
-            max-width: 620px;
+            flex: none;
+            width: 50%;
+            max-width: 600px;
             text-align: left;
             z-index: 2;
+            position: relative;
         }
 
         .hero-badge {
@@ -256,26 +258,30 @@ $channels = $pdo->query($sqlChannels)->fetchAll(PDO::FETCH_ASSOC);
         }
 
         .hero-banner-image {
-            flex: 1.1;
-            position: relative;
+            position: absolute;
+            top: 0;
+            right: 0;
+            width: 55%;
+            height: 100%;
+            z-index: 1;
             display: flex;
             justify-content: flex-end;
-            align-items: center;
-            z-index: 1;
+            align-items: flex-end;
+            overflow: hidden;
         }
 
         .hero-banner-image img {
-            width: 100%;
-            max-width: 580px;
-            height: auto;
+            height: 100%;
+            width: auto;
+            object-fit: cover;
             border-radius: 0;
-            mask-image: linear-gradient(to left, rgba(0,0,0,1) 60%, rgba(0,0,0,0) 100%),
+            mask-image: linear-gradient(to left, rgba(0,0,0,1) 40%, rgba(0,0,0,0) 100%),
                         linear-gradient(to bottom, rgba(0,0,0,1) 75%, rgba(0,0,0,0) 100%);
-            -webkit-mask-image: linear-gradient(to left, rgba(0,0,0,1) 60%, rgba(0,0,0,0) 100%),
+            -webkit-mask-image: linear-gradient(to left, rgba(0,0,0,1) 40%, rgba(0,0,0,0) 100%),
                                 linear-gradient(to bottom, rgba(0,0,0,1) 75%, rgba(0,0,0,0) 100%);
             mask-composite: intersect;
             -webkit-mask-composite: source-in;
-            filter: drop-shadow(0 0 40px rgba(30, 80, 110, 0.4));
+            filter: drop-shadow(0 0 50px rgba(30, 80, 110, 0.4));
             animation: floatImage 6s ease-in-out infinite;
         }
 
