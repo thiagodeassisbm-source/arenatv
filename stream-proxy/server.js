@@ -40,6 +40,7 @@ function pipeStream(targetUrl, req, res, forceType, redirectsLeft = 6, originalU
     const baseTarget = originalUrl || targetUrl;
     const p = new URL(targetUrl);
     const lib = p.protocol === 'https:' ? https : http;
+    
     const opts = {
         hostname: p.hostname,
         port: p.port || (p.protocol === 'https:' ? 443 : 80),
@@ -47,44 +48,59 @@ function pipeStream(targetUrl, req, res, forceType, redirectsLeft = 6, originalU
         method: 'GET',
         headers: headersFor(baseTarget),
     };
+    
     if (req.headers.range) opts.headers.Range = req.headers.range;
 
     const upstream = lib.request(opts, (up) => {
         const code = up.statusCode || 502;
+        
         if ([301, 302, 303, 307, 308].includes(code) && redirectsLeft > 0 && up.headers.location) {
             const next = new URL(up.headers.location, targetUrl).href;
             up.resume();
             return pipeStream(next, req, res, forceType, redirectsLeft - 1, baseTarget);
         }
+        
         if (code >= 400) {
             res.writeHead(code, { 'Access-Control-Allow-Origin': '*', 'Content-Type': 'text/plain' });
             res.end(`Upstream HTTP ${code}`);
             return;
         }
-        if (code !== 200 && code !== 206) {
-            res.writeHead(code, { 'Access-Control-Allow-Origin': '*', 'Content-Type': 'text/plain' });
-            up.resume();
-            up.on('end', () => res.end());
-            return;
-        }
+        
         const outHeaders = {
             'Access-Control-Allow-Origin': '*',
-            'Cache-Control': 'no-cache',
+            'Cache-Control': 'no-cache, no-store, must-revalidate',
+            'Pragma': 'no-cache',
+            'Connection': 'keep-alive',
         };
+        
         if (forceType === 'mpegts') outHeaders['Content-Type'] = 'video/mp2t';
         else if (up.headers['content-type']) outHeaders['Content-Type'] = up.headers['content-type'];
+        else outHeaders['Content-Type'] = 'video/mp2t'; // Fallback padrão para canais IPTV
         
         if (up.headers['content-range']) outHeaders['Content-Range'] = up.headers['content-range'];
         if (up.headers['content-length']) outHeaders['Content-Length'] = up.headers['content-length'];
         if (up.headers['accept-ranges']) outHeaders['Accept-Ranges'] = up.headers['accept-ranges'];
 
-        res.writeHead(code, outHeaders);
+        res.writeHead(code === 200 || code === 206 ? code : 200, outHeaders);
+        
+        // Garante que os dados sejam transmitidos sem travar o buffer do Node
         up.pipe(res);
+        
+        // Se o usuário fechar o player, corta a conexão com o servidor de IPTV imediatamente
+        req.on('close', () => {
+            up.destroy();
+            upstream.destroy();
+        });
     });
-    upstream.on('error', () => {
-        res.writeHead(502, { 'Access-Control-Allow-Origin': '*' });
-        res.end('Proxy error');
+
+    upstream.on('error', (err) => {
+        console.error("[Proxy Node] Erro no Upstream:", err.message);
+        if (!res.writableEnded) {
+            res.writeHead(502, { 'Access-Control-Allow-Origin': '*' });
+            res.end('Proxy error');
+        }
     });
+    
     upstream.end();
 }
 
