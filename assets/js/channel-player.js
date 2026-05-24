@@ -92,10 +92,8 @@
             hasVideo: true,
         }, {
             enableWorker: true,
-            enableStashBuffer: true,
-            stashInitialSize: 256 * 1024,
+            enableStashBuffer: false,
             lazyLoad: false,
-            liveBufferLatencyChasing: true,
         });
         mpegtsPlayer.attachMediaElement(video);
         mpegtsPlayer.load();
