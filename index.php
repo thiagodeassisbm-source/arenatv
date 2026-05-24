@@ -60,18 +60,24 @@ $channels = $pdo->query($sqlChannels)->fetchAll(PDO::FETCH_ASSOC);
             overflow-x: hidden;
         }
 
-        /* Topbar */
+        /* Topbar (Overlay Transparente) */
         .topbar {
-            background: rgba(14, 8, 34, 0.85);
-            backdrop-filter: blur(12px);
-            border-bottom: 1px solid var(--border);
-            padding: 15px 40px;
+            background: transparent;
+            padding: 25px 8%;
+            position: absolute;
+            width: 100%;
+            top: 0;
+            left: 0;
             display: flex;
             justify-content: space-between;
             align-items: center;
-            position: sticky;
-            top: 0;
             z-index: 100;
+        }
+        @media (min-width: 1400px) {
+            .topbar {
+                padding-left: calc((100vw - 1200px) / 2 + 20px);
+                padding-right: calc((100vw - 1200px) / 2 + 20px);
+            }
         }
 
         .brand {
@@ -134,18 +140,27 @@ $channels = $pdo->query($sqlChannels)->fetchAll(PDO::FETCH_ASSOC);
             box-shadow: 0 0 15px rgba(124, 58, 237, 0.3);
         }
 
-        /* Hero Banner Premium */
+        /* Hero Banner Premium (Full-Bleed Estilo DAZN) */
         .hero-banner {
-            max-width: 1200px;
-            width: 100%;
-            margin: 45px auto 25px;
-            padding: 0 20px;
+            width: 100vw;
+            margin: 0;
+            padding: 140px 8% 60px;
             display: flex;
             align-items: center;
             justify-content: space-between;
             gap: 50px;
-            min-height: 440px;
             position: relative;
+            background: radial-gradient(circle at 75% 40%, rgba(30, 80, 110, 0.45) 0%, rgba(10, 6, 21, 0) 65%),
+                        radial-gradient(circle at 20% 50%, rgba(124, 58, 237, 0.15) 0%, rgba(10, 6, 21, 0) 70%),
+                        linear-gradient(180deg, #09121e 0%, var(--bg-dark) 100%);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+            overflow: hidden;
+        }
+        @media (min-width: 1400px) {
+            .hero-banner {
+                padding-left: calc((100vw - 1200px) / 2 + 20px);
+                padding-right: calc((100vw - 1200px) / 2 + 20px);
+            }
         }
 
         .hero-banner-content {
@@ -198,34 +213,35 @@ $channels = $pdo->query($sqlChannels)->fetchAll(PDO::FETCH_ASSOC);
         }
 
         .btn-hero-primary {
-            background: linear-gradient(135deg, var(--color-purple), var(--color-red));
-            color: #fff;
+            background: #ffffff;
+            color: #07040e;
             border: none;
-            padding: 14px 28px;
-            font-weight: 800;
+            padding: 14px 32px;
+            font-weight: 700;
             font-size: 14px;
-            border-radius: 10px;
+            border-radius: 30px;
             cursor: pointer;
             display: flex;
             align-items: center;
             gap: 10px;
-            box-shadow: 0 6px 18px rgba(239, 68, 68, 0.3);
+            box-shadow: 0 4px 15px rgba(255, 255, 255, 0.15);
             transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
         }
 
         .btn-hero-primary:hover {
+            background: #f3f4f6;
             transform: translateY(-2px);
-            box-shadow: 0 10px 25px rgba(239, 68, 68, 0.45);
+            box-shadow: 0 8px 25px rgba(255, 255, 255, 0.3);
         }
 
         .btn-hero-secondary {
-            background: rgba(255, 255, 255, 0.04);
-            border: 1px solid rgba(255, 255, 255, 0.08);
-            color: var(--text-primary);
+            background: rgba(255, 255, 255, 0.08);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            color: #fff;
             padding: 14px 28px;
-            font-weight: 800;
+            font-weight: 700;
             font-size: 14px;
-            border-radius: 10px;
+            border-radius: 30px;
             text-decoration: none;
             display: flex;
             align-items: center;
@@ -234,38 +250,33 @@ $channels = $pdo->query($sqlChannels)->fetchAll(PDO::FETCH_ASSOC);
         }
 
         .btn-hero-secondary:hover {
-            background: rgba(255, 255, 255, 0.08);
-            border-color: rgba(255, 255, 255, 0.15);
+            background: rgba(255, 255, 255, 0.15);
+            border-color: rgba(255, 255, 255, 0.3);
             color: #fff;
         }
 
         .hero-banner-image {
-            flex: 0.9;
+            flex: 1.1;
             position: relative;
             display: flex;
-            justify-content: center;
+            justify-content: flex-end;
             align-items: center;
             z-index: 1;
         }
 
         .hero-banner-image img {
             width: 100%;
-            max-width: 440px;
+            max-width: 580px;
             height: auto;
-            border-radius: 24px;
-            mask-image: linear-gradient(to bottom, rgba(0,0,0,1) 85%, rgba(0,0,0,0) 100%);
-            -webkit-mask-image: linear-gradient(to bottom, rgba(0,0,0,1) 85%, rgba(0,0,0,0) 100%);
-            filter: drop-shadow(0 15px 30px rgba(124, 58, 237, 0.3));
+            border-radius: 0;
+            mask-image: linear-gradient(to left, rgba(0,0,0,1) 60%, rgba(0,0,0,0) 100%),
+                        linear-gradient(to bottom, rgba(0,0,0,1) 75%, rgba(0,0,0,0) 100%);
+            -webkit-mask-image: linear-gradient(to left, rgba(0,0,0,1) 60%, rgba(0,0,0,0) 100%),
+                                linear-gradient(to bottom, rgba(0,0,0,1) 75%, rgba(0,0,0,0) 100%);
+            mask-composite: intersect;
+            -webkit-mask-composite: source-in;
+            filter: drop-shadow(0 0 40px rgba(30, 80, 110, 0.4));
             animation: floatImage 6s ease-in-out infinite;
-        }
-
-        .image-overlay-glow {
-            position: absolute;
-            width: 300px;
-            height: 300px;
-            background: radial-gradient(circle, rgba(124, 58, 237, 0.3) 0%, rgba(239, 68, 68, 0) 70%);
-            z-index: -1;
-            filter: blur(40px);
         }
 
         @keyframes floatImage {
@@ -336,11 +347,18 @@ $channels = $pdo->query($sqlChannels)->fetchAll(PDO::FETCH_ASSOC);
         }
 
         @media (max-width: 992px) {
+            .topbar {
+                position: relative !important;
+                background: #09121e !important;
+                padding: 15px 20px !important;
+            }
+            
             .hero-banner {
                 flex-direction: column;
                 text-align: center;
                 gap: 40px;
-                margin-top: 15px;
+                padding: 40px 20px !important;
+                width: 100% !important;
             }
 
             .hero-banner-content {
@@ -358,8 +376,14 @@ $channels = $pdo->query($sqlChannels)->fetchAll(PDO::FETCH_ASSOC);
                 justify-content: center;
             }
 
+            .hero-banner-image {
+                justify-content: center;
+            }
+
             .hero-banner-image img {
                 max-width: 340px;
+                mask-image: linear-gradient(to bottom, rgba(0,0,0,1) 75%, rgba(0,0,0,0) 100%);
+                -webkit-mask-image: linear-gradient(to bottom, rgba(0,0,0,1) 75%, rgba(0,0,0,0) 100%);
             }
         }
 
