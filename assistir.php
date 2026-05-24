@@ -779,5 +779,82 @@ if ($gameId > 0) {
         </script>
     <?php endif; ?>
 
+    <!-- Real-time Transmission Window Controller (Automatic Release and Block) -->
+    <script>
+        (function() {
+            const transmissionStartStr = <?php echo $game['transmission_start'] ? json_encode($game['transmission_start']) : 'null'; ?>;
+            const transmissionEndStr = <?php echo $game['transmission_end'] ? json_encode($game['transmission_end']) : 'null'; ?>;
+            const offlineImgUrl = <?php echo json_encode($settings['offline_image'] ?? 'assets/images/transmission_ended.png'); ?>;
+            const gamePrice = <?php echo (float)$game['price']; ?>;
+            const gameChannelId = <?php echo (int)$game['channel_id']; ?>;
+
+            if (transmissionStartStr) {
+                const startDate = new Date(transmissionStartStr.replace(' ', 'T'));
+                const endDate = transmissionEndStr ? new Date(transmissionEndStr.replace(' ', 'T')) : null;
+
+                function checkTime() {
+                    const now = new Date();
+                    
+                    // 1. Caso a transmissão tenha passado do horário de término -> BLOQUEIO REAL-TIME
+                    if (endDate && now > endDate) {
+                        const playerWrapper = document.querySelector('.player-wrapper');
+                        if (playerWrapper && !playerWrapper.querySelector('img[alt="Transmissão Encerrada"]')) {
+                            playerWrapper.innerHTML = `
+                                <div class="paywall-overlay" style="background: #000; padding: 0; display: block; overflow: hidden; position: relative; width: 100%; height: 100%;">
+                                    <img src="${offlineImgUrl}" style="width: 100%; height: 100%; object-fit: cover;" alt="Transmissão Encerrada">
+                                    <div style="position: absolute; bottom: 20px; left: 50%; transform: translateX(-50%); z-index: 15; width: 90%; max-width: 320px; text-align: center;">
+                                        <a href="index.php" class="btn-buy" style="background: rgba(22, 14, 43, 0.95); border: 1px solid rgba(255, 255, 255, 0.1); backdrop-filter: blur(10px); text-decoration: none; padding: 10px 20px; font-size: 13px; font-weight: 700; border-radius: 8px; box-shadow: 0 4px 15px rgba(0,0,0,0.5); display: inline-block;">
+                                            <i class="fa-solid fa-arrow-left"></i> Voltar ao Menu de Jogos
+                                        </a>
+                                    </div>
+                                </div>
+                            `;
+                            
+                            // Bloquear Chat se ativo
+                            const chatContainer = document.getElementById('chat-messages-box');
+                            if (chatContainer) {
+                                const endNotice = document.createElement('div');
+                                endNotice.style.textAlign = 'center';
+                                endNotice.style.color = '#ef4444';
+                                endNotice.style.fontWeight = '700';
+                                endNotice.style.margin = '15px 0';
+                                endNotice.style.fontSize = '12px';
+                                endNotice.innerHTML = '<i class="fa-solid fa-circle-minus"></i> Transmissão encerrada pelo administrador. Chat finalizado.';
+                                chatContainer.appendChild(endNotice);
+                                chatContainer.scrollTop = chatContainer.scrollHeight;
+
+                                const chatInput = document.getElementById('chat-input-text');
+                                const chatBtn = document.querySelector('.chat-input-area button');
+                                if (chatInput) chatInput.disabled = true;
+                                if (chatBtn) chatBtn.disabled = true;
+                            }
+                        }
+                    }
+                    
+                    // 2. Caso a transmissão tenha iniciado e ainda não acabou -> DESBLOQUEIO REAL-TIME (Se estava travado)
+                    if (now >= startDate && (!endDate || now <= endDate)) {
+                        const playerWrapper = document.querySelector('.player-wrapper');
+                        // Só executa se estiver exibindo a tela de agendado (lock)
+                        if (playerWrapper && playerWrapper.querySelector('h3.ticket-title')?.textContent.includes('Transmissão Agendada')) {
+                            if (gamePrice > 0) {
+                                // Se for pago, recarrega para acionar paywall nativo de checkout
+                                window.location.reload();
+                            } else {
+                                // Se for grátis, renderiza o iframe do player dinamicamente sem reload!
+                                playerWrapper.innerHTML = `
+                                    <iframe src="player_embed.php?id=${gameChannelId}" style="width: 100%; height: 100%; border: none; background: #000; display: block;" allow="autoplay; encrypted-media; picture-in-picture" allowfullscreen></iframe>
+                                `;
+                            }
+                        }
+                    }
+                }
+
+                // Executa a primeira checagem imediatamente e depois a cada 3 segundos
+                checkTime();
+                setInterval(checkTime, 3000);
+            }
+        })();
+    </script>
+
 </body>
 </html>
