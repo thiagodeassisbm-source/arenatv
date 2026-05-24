@@ -70,6 +70,8 @@ function initNavigation() {
         } else if (tabId === 'games') {
             fetchGames();
             fetchSportsChannelsForDropdown();
+        } else if (tabId === 'calendar') {
+            fetchIntegratedCalendar();
         }
 
         appState.currentTab = tabId;
@@ -1112,4 +1114,120 @@ window.showToast = function(message, type = 'info') {
             toast.remove();
         }, 300);
     }, 3000);
+};
+
+/* ==========================================
+   GRADE DE JOGOS INTEGRADA (SPA)
+   ========================================== */
+window.fetchIntegratedCalendar = function() {
+    const gamesContainer = document.getElementById('integrated-games-container');
+    const channelsContainer = document.getElementById('integrated-channels-container');
+    const channelsCountSpan = document.getElementById('integrated-channels-count');
+    if (!gamesContainer || !channelsContainer) return;
+
+    gamesContainer.innerHTML = `
+        <div class="empty-state" style="padding: 30px 20px;">
+            <div class="spinner" style="margin: 0 auto 10px; width: 40px; height: 40px;"></div>
+            <h3>Carregando Grade de Transmissões</h3>
+        </div>
+    `;
+
+    // Load Games
+    fetch('ajax/get_games.php')
+    .then(res => res.json())
+    .then(data => {
+        if (data.success) {
+            const activeGames = data.games.filter(g => g.status === 'ativo');
+            if (activeGames.length === 0) {
+                gamesContainer.innerHTML = `
+                    <div class="empty-state">
+                        <i class="fa-solid fa-calendar-xmark" style="font-size: 40px; color: rgba(124, 58, 237, 0.2); margin-bottom: 15px;"></i>
+                        <h3>Nenhum Jogo Agendado</h3>
+                        <p>Não há partidas ativas programadas para venda ou transmissão neste momento.</p>
+                    </div>
+                `;
+            } else {
+                gamesContainer.innerHTML = '';
+                activeGames.forEach(game => {
+                    const logoHtml = game.channel_logo ? 
+                        `<img src="${game.channel_logo}" alt="Logo" onerror="handleLogoError(this)">` : 
+                        `<i class="fa-solid fa-tv" style="font-size: 10px; color: var(--color-purple-light);"></i>`;
+
+                    const dateHtml = game.game_date ? 
+                        `<div class="game-ticket-date-integrated" style="font-size: 11px; color: var(--color-purple-light); font-weight: 700; margin-bottom: 8px; display: flex; align-items: center; justify-content: center; gap: 6px;"><i class="fa-solid fa-calendar-days"></i> ${formatDateTime(game.game_date)}</div>` : 
+                        '';
+
+                    const priceHtml = game.price > 0 ? 
+                        `R$ ${parseFloat(game.price).toFixed(2).replace('.', ',')}` : 
+                        'GRÁTIS';
+
+                    const buttonHtml = game.price > 0 ? 
+                        `<a href="assistir.php?jogo=${game.id}" target="_blank" class="btn-ticket-integrated buy"><i class="fa-solid fa-ticket"></i> Adquirir Acesso</a>` : 
+                        `<button onclick="playMatchIntegrated(${game.id})" class="btn-ticket-integrated"><i class="fa-solid fa-circle-play"></i> Assistir Agora</button>`;
+
+                    const card = document.createElement('div');
+                    card.className = 'game-ticket-integrated';
+                    card.innerHTML = `
+                        <div class="ticket-header-integrated">
+                            <div class="broadcaster-integrated">
+                                <div class="broadcaster-logo-integrated">${logoHtml}</div>
+                                <span class="broadcaster-name-integrated">${game.channel_name || 'Transmissão Direta'}</span>
+                            </div>
+                            <div class="badge-live-integrated"><i class="fa-solid fa-circle" style="font-size: 5px;"></i> NO AR</div>
+                        </div>
+                        <div class="ticket-body-integrated">
+                            <h3 class="match-title-integrated" style="margin-bottom: 8px;">${game.name}</h3>
+                            ${dateHtml}
+                            <p class="match-desc-integrated">${game.description ? game.description.replace(/\n/g, '<br>') : ''}</p>
+                        </div>
+                        <div class="ticket-footer-integrated">
+                            <div class="price-box-integrated">
+                                <span class="price-label-integrated">Ingresso</span>
+                                <span class="price-value-integrated ${game.price > 0 ? '' : 'free'}">${priceHtml}</span>
+                            </div>
+                            ${buttonHtml}
+                        </div>
+                    `;
+                    gamesContainer.appendChild(card);
+                });
+            }
+        }
+    });
+
+    // Load Sports Channels
+    fetch('ajax/get_channels.php?sports_only=1&limit=1000')
+    .then(res => res.json())
+    .then(data => {
+        if (data.success) {
+            const count = data.channels.length;
+            if (channelsCountSpan) channelsCountSpan.textContent = count;
+
+            if (count === 0) {
+                channelsContainer.innerHTML = `
+                    <div class="empty-state">
+                        <i class="fa-solid fa-tv" style="font-size: 40px; color: rgba(124, 58, 237, 0.2); margin-bottom: 15px;"></i>
+                        <h3>Nenhum Canal Esportivo</h3>
+                        <p>Nenhum canal da sua lista M3U foi marcado como esportivo ainda.</p>
+                    </div>
+                `;
+            } else {
+                channelsContainer.innerHTML = '';
+                data.channels.forEach(chan => {
+                    const logoHtml = chan.logo ? 
+                        `<img src="${chan.logo}" alt="Logo" onerror="handleLogoError(this)">` : 
+                        `<i class="fa-solid fa-tv"></i>`;
+
+                    const card = document.createElement('div');
+                    card.className = 'channel-card-integrated';
+                    card.innerHTML = `
+                        <div class="channel-logo-integrated">${logoHtml}</div>
+                        <h4 class="channel-name-integrated">${chan.name}</h4>
+                        <span class="channel-group-integrated">${chan.group_name || 'Esportes'}</span>
+                        <button onclick="playChannelIntegrated(${chan.id})" class="btn-play-channel-integrated"><i class="fa-solid fa-play"></i> Sintonizar Sinal</button>
+                    `;
+                    channelsContainer.appendChild(card);
+                });
+            }
+        }
+    });
 };

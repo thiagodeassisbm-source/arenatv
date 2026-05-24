@@ -704,111 +704,22 @@ require_once __DIR__ . '/includes/header.php';
                 <i class="fa-solid fa-ticket"></i> Jogos Agendados
             </button>
             <button class="tab-btn-integrated" onclick="switchCalendarSubTab('channels')">
-                <i class="fa-solid fa-tv"></i> Grade de Canais (<?php echo count($channelsList); ?>)
+                <i class="fa-solid fa-tv"></i> Grade de Canais (<span id="integrated-channels-count">0</span>)
             </button>
         </div>
 
         <!-- SUBABA 1: Jogos Agendados -->
         <div id="subtab-content-games" class="sub-tab-content active">
-            <?php if (empty($games)): ?>
-                <div class="empty-state">
-                    <i class="fa-solid fa-calendar-xmark"></i>
-                    <h3>Nenhum Jogo Agendado</h3>
-                    <p>Não há partidas ativas programadas para venda ou transmissão neste momento.</p>
-                </div>
-            <?php else: ?>
-                <div class="games-grid-integrated">
-                    <?php foreach ($games as $game): ?>
-                        <div class="game-ticket-integrated">
-                            <div class="ticket-header-integrated">
-                                <div class="broadcaster-integrated">
-                                    <div class="broadcaster-logo-integrated">
-                                        <?php if ($game['channel_logo']): ?>
-                                            <img src="<?php echo htmlspecialchars($game['channel_logo']); ?>" alt="Logo">
-                                        <?php else: ?>
-                                            <i class="fa-solid fa-tv" style="font-size: 10px; color: var(--color-purple-light);"></i>
-                                        <?php endif; ?>
-                                    </div>
-                                    <span class="broadcaster-name-integrated"><?php echo htmlspecialchars($game['channel_name'] ?: 'Transmissão Direta'); ?></span>
-                                </div>
-                                <div class="badge-live-integrated">
-                                    <i class="fa-solid fa-circle" style="font-size: 5px;"></i> NO AR
-                                </div>
-                            </div>
-                            
-                            <div class="ticket-body-integrated">
-                                <h3 class="match-title-integrated"><?php echo htmlspecialchars($game['name']); ?></h3>
-                                <?php if (!empty($game['game_date'])): ?>
-                                    <?php 
-                                        try {
-                                            $date = new DateTime($game['game_date']);
-                                            $formattedDate = $date->format('d/m') . ' às ' . $date->format('H:i');
-                                        } catch (Exception $e) {
-                                            $formattedDate = htmlspecialchars($game['game_date']);
-                                        }
-                                    ?>
-                                    <div class="game-ticket-date-integrated" style="font-size: 11px; color: var(--color-purple-light); font-weight: 700; margin-bottom: 8px; display: flex; align-items: center; justify-content: center; gap: 6px;">
-                                        <i class="fa-solid fa-calendar-days"></i> <?php echo $formattedDate; ?>
-                                    </div>
-                                <?php endif; ?>
-                                <p class="match-desc-integrated"><?php echo nl2br(htmlspecialchars($game['description'])); ?></p>
-                            </div>
-                            
-                            <div class="ticket-footer-integrated">
-                                <div class="price-box-integrated">
-                                    <span class="price-label-integrated">Ingresso</span>
-                                    <?php if ($game['price'] > 0): ?>
-                                        <span class="price-value-integrated">R$ <?php echo number_format($game['price'], 2, ',', '.'); ?></span>
-                                    <?php else: ?>
-                                        <span class="price-value-integrated free">GRÁTIS</span>
-                                    <?php endif; ?>
-                                </div>
-                                
-                                <?php if ($game['price'] > 0): ?>
-                                    <a href="assistir.php?jogo=<?php echo $game['id']; ?>" target="_blank" class="btn-ticket-integrated buy">
-                                        <i class="fa-solid fa-ticket"></i> Adquirir Acesso
-                                    </a>
-                                <?php else: ?>
-                                    <button onclick="playMatchIntegrated(<?php echo $game['id']; ?>)" class="btn-ticket-integrated">
-                                        <i class="fa-solid fa-circle-play"></i> Assistir Agora
-                                    </button>
-                                <?php endif; ?>
-                            </div>
-                        </div>
-                    <?php endforeach; ?>
-                </div>
-            <?php endif; ?>
+            <div class="games-grid-integrated" id="integrated-games-container">
+                <!-- Renderizado dinamicamente por JS -->
+            </div>
         </div>
 
         <!-- SUBABA 2: Grade de Canais -->
         <div id="subtab-content-channels" class="sub-tab-content">
-            <?php if (empty($channelsList)): ?>
-                <div class="empty-state">
-                    <i class="fa-solid fa-tv"></i>
-                    <h3>Nenhum Canal Esportivo</h3>
-                    <p>Nenhum canal da sua lista M3U foi marcado como esportivo ainda.</p>
-                </div>
-            <?php else: ?>
-                <div class="channels-grid-integrated">
-                    <?php foreach ($channelsList as $chan): ?>
-                        <div class="channel-card-integrated">
-                            <div class="channel-logo-integrated">
-                                <?php if ($chan['logo']): ?>
-                                    <img src="<?php echo htmlspecialchars($chan['logo']); ?>" alt="Logo">
-                                <?php else: ?>
-                                    <i class="fa-solid fa-tv"></i>
-                                <?php endif; ?>
-                            </div>
-                            <h4 class="channel-name-integrated"><?php echo htmlspecialchars($chan['name']); ?></h4>
-                            <span class="channel-group-integrated"><?php echo htmlspecialchars($chan['group_name'] ?: 'Esportes'); ?></span>
-                            
-                            <button onclick="playChannelIntegrated(<?php echo $chan['id']; ?>)" class="btn-play-channel-integrated">
-                                <i class="fa-solid fa-play"></i> Sintonizar Sinal
-                            </button>
-                        </div>
-                    <?php endforeach; ?>
-                </div>
-            <?php endif; ?>
+            <div class="channels-grid-integrated" id="integrated-channels-container">
+                <!-- Renderizado dinamicamente por JS -->
+            </div>
         </div>
     </div>
 
