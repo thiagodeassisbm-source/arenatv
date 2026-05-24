@@ -78,7 +78,7 @@ function initNavigation() {
 
     // Suporte ao hash da URL
     const hash = window.location.hash.substring(1);
-    if (hash && ['overview', 'import', 'channels', 'games'].includes(hash)) {
+    if (hash && ['overview', 'import', 'channels', 'games', 'calendar'].includes(hash)) {
         switchTab(hash);
     }
 }
@@ -103,6 +103,10 @@ function updateHeaderTitle(tabId) {
         games: {
             title: 'Vender Jogos',
             subtitle: 'Crie ingressos virtuais vinculados aos canais esportivos.'
+        },
+        calendar: {
+            title: 'Grade de Programação',
+            subtitle: 'Grade de canais esportivos e calendário de partidas ativas.'
         }
     };
 

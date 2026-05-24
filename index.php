@@ -12,6 +12,18 @@ $stmt = $pdo->prepare("SELECT meta_value FROM settings WHERE meta_key = 'm3u_url
 $stmt->execute();
 $m3uUrl = $stmt->fetchColumn() ?: '';
 
+// Buscar Jogos Agendados Ativos para a Grade
+$sqlGames = "SELECT g.*, c.name AS channel_name, c.logo AS channel_logo 
+             FROM games g 
+             LEFT JOIN channels c ON g.channel_id = c.id 
+             WHERE g.status = 'ativo' 
+             ORDER BY g.created_at DESC";
+$games = $pdo->query($sqlGames)->fetchAll(PDO::FETCH_ASSOC);
+
+// Buscar Todos os Canais Esportivos Cadastrados
+$sqlChannelsList = "SELECT id, name, logo, group_name FROM channels WHERE is_sports = 1 ORDER BY name ASC";
+$channelsList = $pdo->query($sqlChannelsList)->fetchAll(PDO::FETCH_ASSOC);
+
 // Incluir o Cabeçalho Premium
 require_once __DIR__ . '/includes/header.php';
 ?>
@@ -283,6 +295,553 @@ require_once __DIR__ . '/includes/header.php';
             </div>
         </div>
     </div>
+</section>
+
+<!-- 5. ABA: GRADE E CALENDÁRIO -->
+<section id="tab-calendar" class="tab-content">
+    <style>
+        /* Estilos locais premium para o Calendário Integrado */
+        .tabs-container-integrated {
+            width: 100%;
+            margin-bottom: 30px;
+        }
+
+        .tab-switcher-integrated {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 25px;
+            border-bottom: 1px solid rgba(255,255,255,0.06);
+            padding-bottom: 15px;
+        }
+
+        .tab-btn-integrated {
+            background: none;
+            border: none;
+            color: var(--text-secondary);
+            font-size: 15px;
+            font-weight: 700;
+            padding: 8px 20px;
+            cursor: pointer;
+            position: relative;
+            transition: color 0.2s;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .tab-btn-integrated.active {
+            color: #fff;
+        }
+
+        .tab-btn-integrated.active::after {
+            content: '';
+            position: absolute;
+            bottom: -16px;
+            left: 0;
+            width: 100%;
+            height: 3px;
+            background: linear-gradient(to right, var(--color-purple), var(--color-red));
+            border-radius: 10px;
+        }
+
+        .sub-tab-content {
+            display: none;
+        }
+
+        .sub-tab-content.active {
+            display: block;
+            animation: fadeInIntegrated 0.4s ease-out forwards;
+        }
+
+        /* Grid de Jogos Agendados */
+        .games-grid-integrated {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+            gap: 20px;
+        }
+
+        .game-ticket-integrated {
+            background: var(--bg-card);
+            backdrop-filter: blur(12px);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            box-shadow: 0 8px 20px rgba(0,0,0,0.3);
+            transition: transform 0.25s, border-color 0.25s, box-shadow 0.25s;
+            position: relative;
+        }
+
+        .game-ticket-integrated:hover {
+            transform: translateY(-4px);
+            border-color: rgba(124, 58, 237, 0.35);
+            box-shadow: 0 12px 25px rgba(124, 58, 237, 0.15);
+        }
+
+        .ticket-header-integrated {
+            padding: 12px 18px;
+            background: rgba(7, 4, 14, 0.4);
+            border-bottom: 1px solid rgba(255,255,255,0.04);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .broadcaster-integrated {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .broadcaster-logo-integrated {
+            width: 26px;
+            height: 26px;
+            background: rgba(255,255,255,0.05);
+            border-radius: 6px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+            border: 1px solid rgba(255,255,255,0.08);
+        }
+
+        .broadcaster-logo-integrated img {
+            max-width: 100%;
+            max-height: 100%;
+            object-fit: contain;
+        }
+
+        .broadcaster-name-integrated {
+            font-size: 10px;
+            font-weight: 700;
+            color: var(--color-purple-light);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .badge-live-integrated {
+            background: var(--color-red);
+            color: #fff;
+            font-size: 8px;
+            font-weight: 800;
+            padding: 2px 6px;
+            border-radius: 4px;
+            letter-spacing: 0.5px;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            animation: blinkIntegrated 1.5s infinite;
+        }
+
+        .ticket-body-integrated {
+            padding: 20px 18px;
+            flex-grow: 1;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            text-align: center;
+        }
+
+        .match-title-integrated {
+            font-size: 16px;
+            font-weight: 800;
+            color: #fff;
+            margin-bottom: 8px;
+            line-height: 1.3;
+        }
+
+        .match-desc-integrated {
+            font-size: 12px;
+            color: var(--text-secondary);
+            line-height: 1.5;
+        }
+
+        .ticket-footer-integrated {
+            padding: 16px 18px;
+            background: rgba(7, 4, 14, 0.4);
+            border-top: 1px solid rgba(255,255,255,0.04);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 10px;
+        }
+
+        .price-box-integrated {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .price-label-integrated {
+            font-size: 8px;
+            color: var(--text-secondary);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .price-value-integrated {
+            font-size: 16px;
+            font-weight: 800;
+            color: #fff;
+        }
+
+        .price-value-integrated.free {
+            color: var(--color-success);
+        }
+
+        .btn-ticket-integrated {
+            background: linear-gradient(135deg, var(--color-purple), var(--color-purple-light));
+            color: #fff;
+            border: none;
+            border-radius: 6px;
+            padding: 8px 16px;
+            font-weight: 700;
+            font-size: 12px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            text-decoration: none;
+            transition: all 0.2s;
+        }
+
+        .btn-ticket-integrated:hover {
+            transform: scale(1.03);
+            box-shadow: 0 0 12px rgba(124, 58, 237, 0.35);
+        }
+
+        .btn-ticket-integrated.buy {
+            background: linear-gradient(135deg, var(--color-purple), var(--color-red));
+        }
+
+        .btn-ticket-integrated.buy:hover {
+            box-shadow: 0 0 12px rgba(239, 68, 68, 0.35);
+        }
+
+        /* Grid de Canais Cadastrados */
+        .channels-grid-integrated {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+            gap: 15px;
+        }
+
+        .channel-card-integrated {
+            background: var(--bg-card);
+            backdrop-filter: blur(12px);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 15px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            text-align: center;
+            box-shadow: 0 6px 15px rgba(0,0,0,0.2);
+            transition: all 0.25s;
+        }
+
+        .channel-card-integrated:hover {
+            transform: translateY(-3px);
+            border-color: rgba(124, 58, 237, 0.3);
+            box-shadow: 0 8px 20px rgba(124, 58, 237, 0.1);
+        }
+
+        .channel-logo-integrated {
+            width: 48px;
+            height: 48px;
+            background: rgba(255,255,255,0.05);
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+            margin-bottom: 10px;
+            border: 1px solid rgba(255,255,255,0.08);
+        }
+
+        .channel-logo-integrated img {
+            max-width: 80%;
+            max-height: 80%;
+            object-fit: contain;
+        }
+
+        .channel-logo-integrated i {
+            font-size: 18px;
+            color: var(--color-purple-light);
+        }
+
+        .channel-name-integrated {
+            font-size: 13px;
+            font-weight: 700;
+            color: #fff;
+            margin-bottom: 4px;
+            line-height: 1.3;
+        }
+
+        .channel-group-integrated {
+            font-size: 10px;
+            color: var(--text-secondary);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 12px;
+        }
+
+        .btn-play-channel-integrated {
+            background: rgba(255,255,255,0.05);
+            color: #fff;
+            border: 1px solid rgba(255,255,255,0.1);
+            border-radius: 6px;
+            padding: 6px 12px;
+            font-weight: 600;
+            font-size: 11px;
+            cursor: pointer;
+            width: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 5px;
+            transition: all 0.2s;
+        }
+
+        .btn-play-channel-integrated:hover {
+            background: var(--color-purple);
+            border-color: var(--color-purple);
+            box-shadow: 0 0 8px rgba(124, 58, 237, 0.3);
+        }
+
+        /* Modal de Vídeo Flutuante */
+        .modal-integrated {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(7, 4, 14, 0.85);
+            backdrop-filter: blur(10px);
+            z-index: 10000;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.3s;
+        }
+
+        .modal-integrated.active {
+            opacity: 1;
+            pointer-events: auto;
+        }
+
+        .modal-content-integrated {
+            background: #000;
+            border-radius: 20px;
+            width: 90%;
+            max-width: 900px;
+            aspect-ratio: 16/9;
+            position: relative;
+            border: 1px solid rgba(124, 58, 237, 0.25);
+            box-shadow: 0 25px 50px rgba(0,0,0,0.6);
+            overflow: hidden;
+            transform: scale(0.9);
+            transition: transform 0.3s;
+        }
+
+        .modal-integrated.active .modal-content-integrated {
+            transform: scale(1);
+        }
+
+        .modal-iframe-integrated {
+            width: 100%;
+            height: 100%;
+            border: none;
+        }
+
+        .btn-close-modal-integrated {
+            position: absolute;
+            top: 15px;
+            right: 15px;
+            width: 32px;
+            height: 32px;
+            background: rgba(0,0,0,0.6);
+            border: 1px solid rgba(255,255,255,0.1);
+            color: #fff;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            z-index: 10;
+            font-size: 14px;
+            transition: all 0.2s;
+        }
+
+        .btn-close-modal-integrated:hover {
+            background: var(--color-red);
+            border-color: var(--color-red);
+            transform: rotate(90deg);
+        }
+
+        @keyframes fadeInIntegrated {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        @keyframes blinkIntegrated {
+            0% { opacity: 1; }
+            50% { opacity: 0.5; }
+            100% { opacity: 1; }
+        }
+    </style>
+
+    <div class="tabs-container-integrated">
+        <div class="tab-switcher-integrated">
+            <button class="tab-btn-integrated active" onclick="switchCalendarSubTab('games')">
+                <i class="fa-solid fa-ticket"></i> Jogos Agendados
+            </button>
+            <button class="tab-btn-integrated" onclick="switchCalendarSubTab('channels')">
+                <i class="fa-solid fa-tv"></i> Grade de Canais (<?php echo count($channelsList); ?>)
+            </button>
+        </div>
+
+        <!-- SUBABA 1: Jogos Agendados -->
+        <div id="subtab-content-games" class="sub-tab-content active">
+            <?php if (empty($games)): ?>
+                <div class="empty-state">
+                    <i class="fa-solid fa-calendar-xmark"></i>
+                    <h3>Nenhum Jogo Agendado</h3>
+                    <p>Não há partidas ativas programadas para venda ou transmissão neste momento.</p>
+                </div>
+            <?php else: ?>
+                <div class="games-grid-integrated">
+                    <?php foreach ($games as $game): ?>
+                        <div class="game-ticket-integrated">
+                            <div class="ticket-header-integrated">
+                                <div class="broadcaster-integrated">
+                                    <div class="broadcaster-logo-integrated">
+                                        <?php if ($game['channel_logo']): ?>
+                                            <img src="<?php echo htmlspecialchars($game['channel_logo']); ?>" alt="Logo">
+                                        <?php else: ?>
+                                            <i class="fa-solid fa-tv" style="font-size: 10px; color: var(--color-purple-light);"></i>
+                                        <?php endif; ?>
+                                    </div>
+                                    <span class="broadcaster-name-integrated"><?php echo htmlspecialchars($game['channel_name'] ?: 'Transmissão Direta'); ?></span>
+                                </div>
+                                <div class="badge-live-integrated">
+                                    <i class="fa-solid fa-circle" style="font-size: 5px;"></i> NO AR
+                                </div>
+                            </div>
+                            
+                            <div class="ticket-body-integrated">
+                                <h3 class="match-title-integrated"><?php echo htmlspecialchars($game['name']); ?></h3>
+                                <p class="match-desc-integrated"><?php echo nl2br(htmlspecialchars($game['description'])); ?></p>
+                            </div>
+                            
+                            <div class="ticket-footer-integrated">
+                                <div class="price-box-integrated">
+                                    <span class="price-label-integrated">Ingresso</span>
+                                    <?php if ($game['price'] > 0): ?>
+                                        <span class="price-value-integrated">R$ <?php echo number_format($game['price'], 2, ',', '.'); ?></span>
+                                    <?php else: ?>
+                                        <span class="price-value-integrated free">GRÁTIS</span>
+                                    <?php endif; ?>
+                                </div>
+                                
+                                <?php if ($game['price'] > 0): ?>
+                                    <a href="assistir.php?jogo=<?php echo $game['id']; ?>" target="_blank" class="btn-ticket-integrated buy">
+                                        <i class="fa-solid fa-ticket"></i> Adquirir Acesso
+                                    </a>
+                                <?php else: ?>
+                                    <button onclick="playMatchIntegrated(<?php echo $game['id']; ?>)" class="btn-ticket-integrated">
+                                        <i class="fa-solid fa-circle-play"></i> Assistir Agora
+                                    </button>
+                                <?php endif; ?>
+                            </div>
+                        </div>
+                    <?php endforeach; ?>
+                </div>
+            <?php endif; ?>
+        </div>
+
+        <!-- SUBABA 2: Grade de Canais -->
+        <div id="subtab-content-channels" class="sub-tab-content">
+            <?php if (empty($channelsList)): ?>
+                <div class="empty-state">
+                    <i class="fa-solid fa-tv"></i>
+                    <h3>Nenhum Canal Esportivo</h3>
+                    <p>Nenhum canal da sua lista M3U foi marcado como esportivo ainda.</p>
+                </div>
+            <?php else: ?>
+                <div class="channels-grid-integrated">
+                    <?php foreach ($channelsList as $chan): ?>
+                        <div class="channel-card-integrated">
+                            <div class="channel-logo-integrated">
+                                <?php if ($chan['logo']): ?>
+                                    <img src="<?php echo htmlspecialchars($chan['logo']); ?>" alt="Logo">
+                                <?php else: ?>
+                                    <i class="fa-solid fa-tv"></i>
+                                <?php endif; ?>
+                            </div>
+                            <h4 class="channel-name-integrated"><?php echo htmlspecialchars($chan['name']); ?></h4>
+                            <span class="channel-group-integrated"><?php echo htmlspecialchars($chan['group_name'] ?: 'Esportes'); ?></span>
+                            
+                            <button onclick="playChannelIntegrated(<?php echo $chan['id']; ?>)" class="btn-play-channel-integrated">
+                                <i class="fa-solid fa-play"></i> Sintonizar Sinal
+                            </button>
+                        </div>
+                    <?php endforeach; ?>
+                </div>
+            <?php endif; ?>
+        </div>
+    </div>
+
+    <!-- Modal Integrado de Vídeo -->
+    <div id="player-modal-integrated" class="modal-integrated" onclick="closePlayerModalIntegrated(event)">
+        <div class="modal-content-integrated" onclick="event.stopPropagation()">
+            <button class="btn-close-modal-integrated" onclick="closePlayerModalIntegrated(event)">
+                <i class="fa-solid fa-xmark"></i>
+            </button>
+            <iframe id="player-iframe-integrated" class="modal-iframe-integrated" src=""></iframe>
+        </div>
+    </div>
+
+    <script>
+        // Alternar sub-abas do calendário
+        function switchCalendarSubTab(subTabId) {
+            document.querySelectorAll('.tab-btn-integrated').forEach(btn => btn.classList.remove('active'));
+            document.querySelectorAll('.sub-tab-content').forEach(content => content.classList.remove('active'));
+            
+            if (subTabId === 'games') {
+                document.querySelector('.tab-btn-integrated:nth-child(1)').classList.add('active');
+                document.getElementById('subtab-content-games').classList.add('active');
+            } else {
+                document.querySelector('.tab-btn-integrated:nth-child(2)').classList.add('active');
+                document.getElementById('subtab-content-channels').classList.add('active');
+            }
+        }
+
+        // Assistir Jogo Grátis
+        function playMatchIntegrated(gameId) {
+            const modal = document.getElementById('player-modal-integrated');
+            const iframe = document.getElementById('player-iframe-integrated');
+            iframe.src = 'assistir.php?jogo=' + gameId;
+            modal.classList.add('active');
+        }
+
+        // Assistir Canal Direto
+        function playChannelIntegrated(channelId) {
+            const modal = document.getElementById('player-modal-integrated');
+            const iframe = document.getElementById('player-iframe-integrated');
+            iframe.src = 'player_embed.php?id=' + channelId;
+            modal.classList.add('active');
+        }
+
+        // Fechar Modal
+        function closePlayerModalIntegrated(e) {
+            const modal = document.getElementById('player-modal-integrated');
+            const iframe = document.getElementById('player-iframe-integrated');
+            iframe.src = '';
+            modal.classList.remove('active');
+        }
+    </script>
 </section>
 
 <?php
