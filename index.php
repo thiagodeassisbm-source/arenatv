@@ -946,7 +946,11 @@ $channels = $pdo->query($sqlChannels)->fetchAll(PDO::FETCH_ASSOC);
                             }
                             ?>
                             
-                            <div class="ticket-footer">
+                            <div class="ticket-footer" 
+                                 data-game-id="<?php echo $game['id']; ?>"
+                                 data-start="<?php echo $game['transmission_start']; ?>"
+                                 data-end="<?php echo $game['transmission_end']; ?>"
+                                 data-price="<?php echo (float)$game['price']; ?>">
                                 <div class="price-box">
                                     <span class="price-label">Ingresso</span>
                                     <?php if ($game['price'] > 0): ?>
@@ -1073,6 +1077,84 @@ $channels = $pdo->query($sqlChannels)->fetchAll(PDO::FETCH_ASSOC);
             modal.classList.remove('active');
             document.body.style.overflow = '';
         }
+
+        // Real-time Portal Ticket State Ticker
+        (function() {
+            function updateTicketButtons() {
+                const footers = document.querySelectorAll('.ticket-footer[data-start]');
+                const now = new Date();
+
+                footers.forEach(footer => {
+                    const gameId = footer.getAttribute('data-game-id');
+                    const startStr = footer.getAttribute('data-start');
+                    const endStr = footer.getAttribute('data-end');
+                    const price = parseFloat(footer.getAttribute('data-price') || '0');
+
+                    if (!startStr) return;
+
+                    const startDate = new Date(startStr.replace(' ', 'T'));
+                    const endDate = endStr ? new Date(endStr.replace(' ', 'T')) : null;
+
+                    let targetHtml = '';
+                    let currentState = '';
+
+                    if (endDate && now > endDate) {
+                        currentState = 'ended';
+                        targetHtml = `
+                            <button class="btn-ticket" style="background: rgba(255,255,255,0.05); color: var(--text-secondary); border: 1px solid rgba(255,255,255,0.08); cursor: not-allowed;" disabled>
+                                <i class="fa-solid fa-circle-minus" style="color: var(--text-secondary);"></i> Encerrada
+                            </button>
+                        `;
+                    } else if (now >= startDate && (!endDate || now <= endDate)) {
+                        currentState = 'active';
+                        if (price > 0) {
+                            targetHtml = `
+                                <a href="assistir.php?jogo=${gameId}" class="btn-ticket buy">
+                                    <i class="fa-solid fa-ticket"></i> Adquirir Acesso
+                                </a>
+                            `;
+                        } else {
+                            targetHtml = `
+                                <button onclick="playMatch(${gameId})" class="btn-ticket">
+                                    <i class="fa-solid fa-circle-play"></i> Assistir Agora
+                                </button>
+                            `;
+                        }
+                    } else {
+                        currentState = 'lock';
+                        targetHtml = `
+                            <button class="btn-ticket" style="background: rgba(255,255,255,0.05); color: var(--text-secondary); border: 1px solid rgba(255,255,255,0.08); cursor: not-allowed;" disabled>
+                                <i class="fa-solid fa-lock" style="color: var(--color-red);"></i> Aguardando Início
+                            </button>
+                        `;
+                    }
+
+                    const currentBtn = footer.querySelector('.btn-ticket');
+                    const hasBuyLink = footer.querySelector('a.btn-ticket');
+                    
+                    let renderedState = '';
+                    if (currentBtn) {
+                        if (currentBtn.disabled) {
+                            renderedState = currentBtn.querySelector('.fa-lock') ? 'lock' : 'ended';
+                        } else {
+                            renderedState = 'active';
+                        }
+                    } else if (hasBuyLink) {
+                        renderedState = 'active';
+                    }
+
+                    if (currentState !== renderedState) {
+                        const oldBtn = footer.querySelector('.btn-ticket');
+                        if (oldBtn) oldBtn.remove();
+                        footer.insertAdjacentHTML('beforeend', targetHtml);
+                    }
+                });
+            }
+
+            // Executa a primeira checagem imediatamente e depois a cada 3 segundos
+            updateTicketButtons();
+            setInterval(updateTicketButtons, 3000);
+        })();
     </script>
 </body>
 </html>
