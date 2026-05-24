@@ -134,28 +134,233 @@ $channels = $pdo->query($sqlChannels)->fetchAll(PDO::FETCH_ASSOC);
             box-shadow: 0 0 15px rgba(124, 58, 237, 0.3);
         }
 
-        /* Hero Header */
-        .hero {
-            text-align: center;
-            max-width: 800px;
-            margin: 50px auto 30px;
+        /* Hero Banner Premium */
+        .hero-banner {
+            max-width: 1200px;
+            width: 100%;
+            margin: 45px auto 25px;
             padding: 0 20px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 50px;
+            min-height: 440px;
+            position: relative;
         }
 
-        .hero h1 {
-            font-size: 38px;
+        .hero-banner-content {
+            flex: 1.2;
+            max-width: 620px;
+            text-align: left;
+            z-index: 2;
+        }
+
+        .hero-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            background: rgba(239, 68, 68, 0.15);
+            border: 1px solid rgba(239, 68, 68, 0.3);
+            color: #ff6b6b;
+            padding: 6px 14px;
+            border-radius: 20px;
+            font-size: 11px;
+            font-weight: 800;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 22px;
+            animation: blink 2s infinite;
+        }
+
+        .hero-banner-content h1 {
+            font-size: 48px;
             font-weight: 900;
-            letter-spacing: -0.5px;
-            margin-bottom: 12px;
-            background: linear-gradient(to right, #fff, var(--color-purple-light), #fff);
+            line-height: 1.15;
+            letter-spacing: -1.2px;
+            margin-bottom: 20px;
+            background: linear-gradient(135deg, #ffffff 40%, #c084fc 100%);
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
         }
 
-        .hero p {
+        .hero-banner-content p {
             font-size: 15px;
             color: var(--text-secondary);
-            line-height: 1.6;
+            line-height: 1.65;
+            margin-bottom: 32px;
+        }
+
+        .hero-actions {
+            display: flex;
+            gap: 16px;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+
+        .btn-hero-primary {
+            background: linear-gradient(135deg, var(--color-purple), var(--color-red));
+            color: #fff;
+            border: none;
+            padding: 14px 28px;
+            font-weight: 800;
+            font-size: 14px;
+            border-radius: 10px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            box-shadow: 0 6px 18px rgba(239, 68, 68, 0.3);
+            transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+
+        .btn-hero-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 25px rgba(239, 68, 68, 0.45);
+        }
+
+        .btn-hero-secondary {
+            background: rgba(255, 255, 255, 0.04);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            color: var(--text-primary);
+            padding: 14px 28px;
+            font-weight: 800;
+            font-size: 14px;
+            border-radius: 10px;
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            transition: all 0.25s;
+        }
+
+        .btn-hero-secondary:hover {
+            background: rgba(255, 255, 255, 0.08);
+            border-color: rgba(255, 255, 255, 0.15);
+            color: #fff;
+        }
+
+        .hero-banner-image {
+            flex: 0.9;
+            position: relative;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 1;
+        }
+
+        .hero-banner-image img {
+            width: 100%;
+            max-width: 440px;
+            height: auto;
+            border-radius: 24px;
+            mask-image: linear-gradient(to bottom, rgba(0,0,0,1) 85%, rgba(0,0,0,0) 100%);
+            -webkit-mask-image: linear-gradient(to bottom, rgba(0,0,0,1) 85%, rgba(0,0,0,0) 100%);
+            filter: drop-shadow(0 15px 30px rgba(124, 58, 237, 0.3));
+            animation: floatImage 6s ease-in-out infinite;
+        }
+
+        .image-overlay-glow {
+            position: absolute;
+            width: 300px;
+            height: 300px;
+            background: radial-gradient(circle, rgba(124, 58, 237, 0.3) 0%, rgba(239, 68, 68, 0) 70%);
+            z-index: -1;
+            filter: blur(40px);
+        }
+
+        @keyframes floatImage {
+            0% { transform: translateY(0px); }
+            50% { transform: translateY(-12px); }
+            100% { transform: translateY(0px); }
+        }
+
+        /* Carrossel de Ligas Premium */
+        .leagues-container {
+            max-width: 1200px;
+            width: 100%;
+            margin: 15px auto 40px;
+            padding: 0 20px;
+            overflow-x: auto;
+            scrollbar-width: none;
+        }
+
+        .leagues-container::-webkit-scrollbar {
+            display: none;
+        }
+
+        .leagues-wrapper {
+            display: flex;
+            gap: 12px;
+            white-space: nowrap;
+        }
+
+        .league-chip {
+            background: rgba(22, 14, 43, 0.5);
+            border: 1px solid var(--border);
+            color: var(--text-secondary);
+            padding: 10px 20px;
+            border-radius: 12px;
+            font-size: 13px;
+            font-weight: 700;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            transition: all 0.2s ease;
+        }
+
+        .league-chip:hover {
+            background: rgba(124, 58, 237, 0.15);
+            border-color: rgba(124, 58, 237, 0.3);
+            color: #fff;
+        }
+
+        .league-chip.active {
+            background: var(--color-purple);
+            border-color: var(--color-purple);
+            color: #fff;
+            box-shadow: 0 0 15px rgba(124, 58, 237, 0.35);
+        }
+
+        /* Badge de Horário Amarelo */
+        .badge-time {
+            background: linear-gradient(135deg, #facc15, #eab308);
+            color: #000;
+            font-size: 10px;
+            font-weight: 900;
+            padding: 4px 10px;
+            border-radius: 6px;
+            letter-spacing: 0.5px;
+            text-transform: uppercase;
+            box-shadow: 0 2px 8px rgba(234, 179, 8, 0.3);
+        }
+
+        @media (max-width: 992px) {
+            .hero-banner {
+                flex-direction: column;
+                text-align: center;
+                gap: 40px;
+                margin-top: 15px;
+            }
+
+            .hero-banner-content {
+                max-width: 100%;
+                display: flex;
+                flex-direction: column;
+                align-items: center;
+            }
+
+            .hero-banner-content h1 {
+                font-size: 36px;
+            }
+
+            .hero-actions {
+                justify-content: center;
+            }
+
+            .hero-banner-image img {
+                max-width: 340px;
+            }
         }
 
         /* Container Tabs Toggle */
@@ -597,11 +802,52 @@ $channels = $pdo->query($sqlChannels)->fetchAll(PDO::FETCH_ASSOC);
         </a>
     </header>
 
-    <!-- Hero Header -->
-    <section class="hero">
-        <h1>Grade de Transmissões Esportivas</h1>
-        <p>Acompanhe todos os confrontos em tempo real. Escolha a sua partida ou sintonize o canal esportivo correspondente para vivenciar a melhor cobertura ao vivo da internet.</p>
+    <!-- Hero Banner Premium -->
+    <section class="hero-banner">
+        <div class="hero-banner-content">
+            <div class="hero-badge">
+                <i class="fa-solid fa-bolt"></i> Cobertura Exclusiva Ao Vivo
+            </div>
+            <h1>Melhores Momentos e Jogos Grátis e Premium</h1>
+            <p>Gols, destaques e grandes momentos da LALIGA, Brasileirão, UEFA Champions League, Premier League, Libertadores e muito mais com a melhor qualidade de transmissão.</p>
+            <div class="hero-actions">
+                <button onclick="scrollToGames()" class="btn-hero-primary">
+                    <i class="fa-solid fa-circle-play"></i> Assistir Agora
+                </button>
+                <a href="index.php" class="btn-hero-secondary">
+                    <i class="fa-solid fa-user-gear"></i> Painel Admin
+                </a>
+            </div>
+        </div>
+        <div class="hero-banner-image">
+            <img src="assets/images/football_stars_hero.png" alt="Craques do Futebol">
+            <div class="image-overlay-glow"></div>
+        </div>
     </section>
+
+    <!-- Leagues Horizontal Switcher -->
+    <div class="leagues-container" id="leagues-anchor">
+        <div class="leagues-wrapper">
+            <div class="league-chip active" onclick="filterByLeague('all')">
+                <i class="fa-solid fa-trophy"></i> Todos os Jogos
+            </div>
+            <div class="league-chip" onclick="filterByLeague('champions')">
+                <i class="fa-solid fa-star"></i> Champions League
+            </div>
+            <div class="league-chip" onclick="filterByLeague('brasileirao')">
+                <i class="fa-solid fa-shield-halved"></i> Brasileirão
+            </div>
+            <div class="league-chip" onclick="filterByLeague('laliga')">
+                <i class="fa-solid fa-futbol"></i> LaLiga
+            </div>
+            <div class="league-chip" onclick="filterByLeague('premier')">
+                <i class="fa-solid fa-crown"></i> Premier League
+            </div>
+            <div class="league-chip" onclick="filterByLeague('libertadores')">
+                <i class="fa-solid fa-earth-americas"></i> Libertadores
+            </div>
+        </div>
+    </div>
 
     <!-- Tabs Toggle -->
     <div class="tabs-container">
@@ -625,7 +871,65 @@ $channels = $pdo->query($sqlChannels)->fetchAll(PDO::FETCH_ASSOC);
             <?php else: ?>
                 <div class="games-grid">
                     <?php foreach ($games as $game): ?>
-                        <div class="game-ticket">
+                        <?php
+                        // 1. Classificação de Liga do Jogo
+                        $gameLeague = 'other';
+                        $searchStr = mb_strtolower($game['name'] . ' ' . $game['description'], 'UTF-8');
+                        if (str_contains($searchStr, 'champions') || str_contains($searchStr, 'uefa')) {
+                            $gameLeague = 'champions';
+                        } else if (str_contains($searchStr, 'brasileirao') || str_contains($searchStr, 'brasileirão') || str_contains($searchStr, 'série a')) {
+                            $gameLeague = 'brasileirao';
+                        } else if (str_contains($searchStr, 'laliga') || str_contains($searchStr, 'la liga') || str_contains($searchStr, 'espanhol')) {
+                            $gameLeague = 'laliga';
+                        } else if (str_contains($searchStr, 'premier') || str_contains($searchStr, 'inglês') || str_contains($searchStr, 'ingles')) {
+                            $gameLeague = 'premier';
+                        } else if (str_contains($searchStr, 'libertadores') || str_contains($searchStr, 'conmebol')) {
+                            $gameLeague = 'libertadores';
+                        }
+
+                        // 2. Formatação Premium de Data/Hora (Estilo DAZN)
+                        $badgeTime = '';
+                        $formattedDate = '';
+                        if (!empty($game['game_date'])) {
+                            try {
+                                $date = new DateTime($game['game_date']);
+                                $now = new DateTime();
+                                
+                                // Formatar data padrão
+                                $formattedDate = $date->format('d/m') . ' às ' . $date->format('H:i');
+                                
+                                // Diferença em dias absolutos
+                                $todayStr = $now->format('Y-m-d');
+                                $gameDayStr = $date->format('Y-m-d');
+                                
+                                if ($todayStr === $gameDayStr) {
+                                    $badgeTime = 'HOJE ' . $date->format('H:i');
+                                } else {
+                                    $tomorrow = clone $now;
+                                    $tomorrow->modify('+1 day');
+                                    if ($tomorrow->format('Y-m-d') === $gameDayStr) {
+                                        $badgeTime = 'AMANHÃ ' . $date->format('H:i');
+                                    } else {
+                                        $daysOfWeek = [
+                                            0 => 'DOM',
+                                            1 => 'SEG',
+                                            2 => 'TER',
+                                            3 => 'QUA',
+                                            4 => 'QUI',
+                                            5 => 'SEX',
+                                            6 => 'SÁB'
+                                        ];
+                                        $badgeTime = $daysOfWeek[(int)$date->format('w')] . ' ' . $date->format('H:i');
+                                    }
+                                }
+                            } catch (Exception $e) {
+                                $badgeTime = 'EM BREVE';
+                            }
+                        } else {
+                            $badgeTime = 'NO AR';
+                        }
+                        ?>
+                        <div class="game-ticket" data-league="<?php echo $gameLeague; ?>">
                             <div class="ticket-header">
                                 <div class="broadcaster">
                                     <div class="broadcaster-logo">
@@ -637,22 +941,20 @@ $channels = $pdo->query($sqlChannels)->fetchAll(PDO::FETCH_ASSOC);
                                     </div>
                                     <span class="broadcaster-name"><?php echo htmlspecialchars($game['channel_name'] ?: 'Transmissão Direta'); ?></span>
                                 </div>
-                                <div class="badge-live">
-                                    <i class="fa-solid fa-circle" style="font-size: 6px;"></i> NO AR
-                                </div>
+                                <?php if ($badgeTime === 'NO AR' || empty($game['game_date'])): ?>
+                                    <div class="badge-live">
+                                        <i class="fa-solid fa-circle" style="font-size: 6px;"></i> NO AR
+                                    </div>
+                                <?php else: ?>
+                                    <div class="badge-time">
+                                        <i class="fa-solid fa-clock" style="font-size: 10px; margin-right: 3px;"></i> <?php echo $badgeTime; ?>
+                                    </div>
+                                <?php endif; ?>
                             </div>
                             
                             <div class="ticket-body">
                                 <h3 class="match-title"><?php echo htmlspecialchars($game['name']); ?></h3>
-                                <?php if (!empty($game['game_date'])): ?>
-                                    <?php 
-                                        try {
-                                            $date = new DateTime($game['game_date']);
-                                            $formattedDate = $date->format('d/m') . ' às ' . $date->format('H:i');
-                                        } catch (Exception $e) {
-                                            $formattedDate = htmlspecialchars($game['game_date']);
-                                        }
-                                    ?>
+                                <?php if (!empty($formattedDate)): ?>
                                     <div class="game-ticket-date" style="font-size: 11px; color: var(--color-purple-light); font-weight: 700; margin-bottom: 8px; display: flex; align-items: center; justify-content: center; gap: 6px;">
                                         <i class="fa-solid fa-calendar-days"></i> <?php echo $formattedDate; ?>
                                     </div>
@@ -729,6 +1031,70 @@ $channels = $pdo->query($sqlChannels)->fetchAll(PDO::FETCH_ASSOC);
     </div>
 
     <script>
+        // Rolar suavemente até a grade de jogos
+        function scrollToGames() {
+            const anchor = document.getElementById('leagues-anchor');
+            if (anchor) {
+                anchor.scrollIntoView({ behavior: 'smooth' });
+            }
+        }
+
+        // Filtrar jogos por liga na hora (instantâneo)
+        function filterByLeague(league) {
+            // Atualizar o chip ativo
+            document.querySelectorAll('.league-chip').forEach(chip => {
+                chip.classList.remove('active');
+            });
+            event.currentTarget.classList.add('active');
+
+            // Garantir que a aba de "Jogos Agendados" esteja ativa
+            switchTab('games');
+
+            // Exibir/Esconder cards
+            let visibleCount = 0;
+            document.querySelectorAll('.game-ticket').forEach(ticket => {
+                if (league === 'all') {
+                    ticket.style.display = 'flex';
+                    visibleCount++;
+                } else {
+                    const ticketLeague = ticket.getAttribute('data-league');
+                    if (ticketLeague === league) {
+                        ticket.style.display = 'flex';
+                        visibleCount++;
+                    } else {
+                        ticket.style.display = 'none';
+                    }
+                }
+            });
+
+            // Gerenciar layout se não houver jogos para a liga selecionada
+            const existingTempEmpty = document.querySelector('.temp-empty');
+            if (existingTempEmpty) existingTempEmpty.remove();
+
+            if (visibleCount === 0) {
+                const contentGames = document.getElementById('tab-content-games');
+                if (contentGames) {
+                    const grid = contentGames.querySelector('.games-grid');
+                    if (grid) grid.style.display = 'none';
+
+                    const noMatch = document.createElement('div');
+                    noMatch.className = 'empty-state temp-empty';
+                    noMatch.innerHTML = `
+                        <i class="fa-solid fa-calendar-xmark" style="font-size: 40px; color: rgba(124, 58, 237, 0.2); margin-bottom: 15px;"></i>
+                        <h3>Nenhuma Partida Encontrada</h3>
+                        <p>Não há jogos ativos cadastrados para esta categoria de liga esportiva no momento.</p>
+                    `;
+                    contentGames.appendChild(noMatch);
+                }
+            } else {
+                const contentGames = document.getElementById('tab-content-games');
+                if (contentGames) {
+                    const grid = contentGames.querySelector('.games-grid');
+                    if (grid) grid.style.display = 'grid';
+                }
+            }
+        }
+
         // Alternar Abas (SPA)
         function switchTab(tabId) {
             // Remover ativo das abas e botões
