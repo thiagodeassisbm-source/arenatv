@@ -45,6 +45,10 @@
                     <i class="fa-solid fa-ticket"></i>
                     <span>Vender Jogos</span>
                 </a>
+                <a href="jogos.php" target="_blank" class="nav-item">
+                    <i class="fa-solid fa-calendar-days"></i>
+                    <span>Ver Calendário</span>
+                </a>
             </nav>
             
             <div class="sidebar-footer">
