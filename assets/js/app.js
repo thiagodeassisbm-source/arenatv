@@ -954,7 +954,7 @@ window.fetchSportsChannelsForDropdown = function() {
 
             // Se estivermos editando um jogo, selecionar o canal correto após carregar
             if (appState.editingGameId !== null) {
-                const game = appState.games.find(g => g.id === appState.editingGameId);
+                const game = appState.games.find(g => g.id == appState.editingGameId);
                 if (game) {
                     dropdown.value = game.channel_id;
                 }
@@ -995,7 +995,7 @@ window.saveGame = function(e) {
 
 // Abre um jogo para edição no formulário
 window.editGame = function(id) {
-    const game = appState.games.find(g => g.id === id);
+    const game = appState.games.find(g => g.id == id);
     if (!game) return;
 
     appState.editingGameId = id;
@@ -1061,7 +1061,7 @@ window.deleteGame = function(id) {
 
 // Copiar Link de Venda ou Transmissão
 window.copyStreamLink = function(id) {
-    const game = appState.games.find(g => g.id === id);
+    const game = appState.games.find(g => g.id == id);
     if (!game) return;
 
     let linkToCopy = '';
