@@ -73,7 +73,6 @@ $channels = $pdo->query($sqlChannels)->fetchAll(PDO::FETCH_ASSOC);
             align-items: center;
             z-index: 100;
         }
-        }
 
         .brand {
             display: flex;
@@ -139,7 +138,7 @@ $channels = $pdo->query($sqlChannels)->fetchAll(PDO::FETCH_ASSOC);
         .hero-banner {
             width: 100vw;
             margin: 0;
-            padding: 180px 8% 80px;
+            padding: 220px 8% 80px;
             display: flex;
             align-items: center;
             justify-content: flex-start;
@@ -263,9 +262,9 @@ $channels = $pdo->query($sqlChannels)->fetchAll(PDO::FETCH_ASSOC);
             width: auto;
             object-fit: cover;
             border-radius: 0;
-            mask-image: radial-gradient(circle at 80% 20%, rgba(0,0,0,1) 30%, rgba(0,0,0,0) 85%);
-            -webkit-mask-image: radial-gradient(circle at 80% 20%, rgba(0,0,0,1) 30%, rgba(0,0,0,0) 85%);
-            filter: drop-shadow(0 0 50px rgba(30, 80, 110, 0.4));
+            mask-image: linear-gradient(to left, rgba(0,0,0,1) 80%, rgba(0,0,0,0) 100%);
+            -webkit-mask-image: linear-gradient(to left, rgba(0,0,0,1) 80%, rgba(0,0,0,0) 100%);
+            filter: drop-shadow(0 0 50px rgba(0, 0, 0, 0.5));
             animation: floatImage 6s ease-in-out infinite;
         }
 
@@ -802,7 +801,7 @@ $channels = $pdo->query($sqlChannels)->fetchAll(PDO::FETCH_ASSOC);
     <!-- Topbar -->
     <header class="topbar">
         <a href="index.php" class="brand">
-            <img src="assets/images/logo.png" alt="Arena Esportiva" style="height: 38px; width: auto; object-fit: contain;">
+            <img src="assets/images/logo.png" alt="Arena Esportiva" style="height: 150px; width: auto; object-fit: contain;">
         </a>
         
         <a href="admin.php" class="btn-admin">
@@ -828,7 +827,7 @@ $channels = $pdo->query($sqlChannels)->fetchAll(PDO::FETCH_ASSOC);
             </div>
         </div>
         <div class="hero-banner-image">
-            <img src="https://images.unsplash.com/photo-1508098682722-e99c43a406b2?auto=format&fit=crop&q=80&w=1200" alt="Craques do Futebol">
+            <img src="assets/images/football_stars_hero.png" alt="Craques do Futebol">
         </div>
     </section>
 
