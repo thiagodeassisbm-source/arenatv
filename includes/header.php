@@ -18,14 +18,8 @@
     <div class="app-container">
         <!-- Sidebar Premium -->
         <aside class="sidebar">
-            <div class="brand">
-                <div class="logo-icon">
-                    <i class="fa-solid fa-circle-play"></i>
-                </div>
-                <div class="brand-text">
-                    <h2>ARENA</h2>
-                    <span>STREAM</span>
-                </div>
+            <div class="brand" style="justify-content: center; padding: 20px 10px;">
+                <img src="assets/images/logo.png" alt="Arena Esportiva" style="max-height: 48px; width: 100%; object-fit: contain;">
             </div>
             
             <nav class="nav-menu">

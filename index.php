@@ -263,12 +263,8 @@ $channels = $pdo->query($sqlChannels)->fetchAll(PDO::FETCH_ASSOC);
             width: auto;
             object-fit: cover;
             border-radius: 0;
-            mask-image: linear-gradient(to left, rgba(0,0,0,1) 40%, rgba(0,0,0,0) 100%),
-                        linear-gradient(to bottom, rgba(0,0,0,1) 75%, rgba(0,0,0,0) 100%);
-            -webkit-mask-image: linear-gradient(to left, rgba(0,0,0,1) 40%, rgba(0,0,0,0) 100%),
-                                linear-gradient(to bottom, rgba(0,0,0,1) 75%, rgba(0,0,0,0) 100%);
-            mask-composite: intersect;
-            -webkit-mask-composite: source-in;
+            mask-image: radial-gradient(circle at 80% 20%, rgba(0,0,0,1) 30%, rgba(0,0,0,0) 85%);
+            -webkit-mask-image: radial-gradient(circle at 80% 20%, rgba(0,0,0,1) 30%, rgba(0,0,0,0) 85%);
             filter: drop-shadow(0 0 50px rgba(30, 80, 110, 0.4));
             animation: floatImage 6s ease-in-out infinite;
         }
@@ -806,13 +802,7 @@ $channels = $pdo->query($sqlChannels)->fetchAll(PDO::FETCH_ASSOC);
     <!-- Topbar -->
     <header class="topbar">
         <a href="index.php" class="brand">
-            <div class="logo-icon">
-                <i class="fa-solid fa-circle-play"></i>
-            </div>
-            <div class="brand-text">
-                <h2>ARENA</h2>
-                <span>STREAM</span>
-            </div>
+            <img src="assets/images/logo.png" alt="Arena Esportiva" style="height: 38px; width: auto; object-fit: contain;">
         </a>
         
         <a href="admin.php" class="btn-admin">

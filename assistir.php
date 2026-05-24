@@ -525,13 +525,7 @@ if ($gameId > 0) {
     <!-- Topbar -->
     <header class="topbar">
         <a href="index.php" class="brand">
-            <div class="logo-icon">
-                <i class="fa-solid fa-circle-play"></i>
-            </div>
-            <div class="brand-text">
-                <h2>ARENA</h2>
-                <span>STREAM</span>
-            </div>
+            <img src="assets/images/logo.png" alt="Arena Esportiva" style="height: 38px; width: auto; object-fit: contain;">
         </a>
         
         <?php if ($game): ?>
