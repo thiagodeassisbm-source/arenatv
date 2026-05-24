@@ -73,11 +73,6 @@ $channels = $pdo->query($sqlChannels)->fetchAll(PDO::FETCH_ASSOC);
             align-items: center;
             z-index: 100;
         }
-        @media (min-width: 1400px) {
-            .topbar {
-                padding-left: calc((100vw - 1200px) / 2 + 20px);
-                padding-right: calc((100vw - 1200px) / 2 + 20px);
-            }
         }
 
         .brand {
@@ -156,13 +151,6 @@ $channels = $pdo->query($sqlChannels)->fetchAll(PDO::FETCH_ASSOC);
             border-bottom: 1px solid rgba(255, 255, 255, 0.05);
             overflow: hidden;
         }
-        @media (min-width: 1400px) {
-            .hero-banner {
-                padding-left: calc((100vw - 1200px) / 2 + 20px);
-                padding-right: calc((100vw - 1200px) / 2 + 20px);
-            }
-        }
-
         .hero-banner-content {
             flex: none;
             width: 50%;
@@ -293,12 +281,12 @@ $channels = $pdo->query($sqlChannels)->fetchAll(PDO::FETCH_ASSOC);
 
         /* Carrossel de Ligas Premium */
         .leagues-container {
-            max-width: 1200px;
             width: 100%;
-            margin: 15px auto 40px;
-            padding: 0 20px;
+            margin: 15px 0 40px;
+            padding: 0 8%;
             overflow-x: auto;
             scrollbar-width: none;
+            box-sizing: border-box;
         }
 
         .leagues-container::-webkit-scrollbar {
@@ -395,10 +383,10 @@ $channels = $pdo->query($sqlChannels)->fetchAll(PDO::FETCH_ASSOC);
 
         /* Container Tabs Toggle */
         .tabs-container {
-            max-width: 1200px;
             width: 100%;
-            margin: 0 auto 40px;
-            padding: 0 20px;
+            margin: 0 0 40px;
+            padding: 0 8%;
+            box-sizing: border-box;
         }
 
         .tab-switcher {
@@ -850,8 +838,7 @@ $channels = $pdo->query($sqlChannels)->fetchAll(PDO::FETCH_ASSOC);
             </div>
         </div>
         <div class="hero-banner-image">
-            <img src="assets/images/football_stars_hero.png" alt="Craques do Futebol">
-            <div class="image-overlay-glow"></div>
+            <img src="https://images.unsplash.com/photo-1508098682722-e99c43a406b2?auto=format&fit=crop&q=80&w=1200" alt="Craques do Futebol">
         </div>
     </section>
 
