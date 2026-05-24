@@ -91,34 +91,54 @@ function arenaFetchUrl(string $url, int $maxBytes = 0, bool $headOnly = false, b
     $ch = curl_init($url);
     $opts = arenaStreamCurlOpts($url);
     $opts[CURLOPT_URL] = $url;
-    $opts[CURLOPT_RETURNTRANSFER] = true;
-    $opts[CURLOPT_HEADER] = true;
+    $opts[CURLOPT_RETURNTRANSFER] = false;
+    $opts[CURLOPT_HEADER] = false;
+
+    if ($maxBytes === 0 && !$headOnly) {
+        $maxBytes = 500000; // ~500 KB limit
+    }
 
     if ($headOnly) {
         $opts[CURLOPT_NOBODY] = true;
     } elseif ($maxBytes > 0 && $useRange) {
         $opts[CURLOPT_RANGE] = '0-' . ($maxBytes - 1);
-    } elseif ($maxBytes > 0) {
-        $opts[CURLOPT_BUFFERSIZE] = min($maxBytes, 16384);
+    }
+
+    $body = '';
+    $headersRaw = '';
+
+    $opts[CURLOPT_HEADERFUNCTION] = static function ($ch, string $headerLine) use (&$headersRaw) {
+        $headersRaw .= $headerLine;
+        return strlen($headerLine);
+    };
+
+    if (!$headOnly) {
+        $opts[CURLOPT_WRITEFUNCTION] = static function ($ch, string $chunk) use (&$body, $maxBytes) {
+            $body .= $chunk;
+            if ($maxBytes > 0 && strlen($body) >= $maxBytes) {
+                return 0; // Abort download once maxBytes is reached
+            }
+            return strlen($chunk);
+        };
     }
 
     curl_setopt_array($ch, $opts);
-    $raw = curl_exec($ch);
+    $ok = curl_exec($ch);
     $err = curl_error($ch);
     $info = curl_getinfo($ch);
     curl_close($ch);
 
-    if ($raw === false) {
+    if ($ok === false && !empty($body)) {
+        $ok = true;
+    }
+
+    if ($ok === false) {
         return ['ok' => false, 'error' => $err ?: 'Falha ao conectar', 'body' => '', 'info' => $info];
     }
 
-    $headerSize = (int)($info['header_size'] ?? 0);
-    $headersRaw = substr($raw, 0, $headerSize);
-    $bodyPart = substr($raw, $headerSize);
-
     return [
         'ok' => true,
-        'body' => $bodyPart,
+        'body' => $body,
         'headers' => $headersRaw,
         'info' => $info,
         'final_url' => $info['url'] ?? $url,
