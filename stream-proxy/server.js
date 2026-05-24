@@ -130,7 +130,7 @@ function rewriteM3u8(body, baseUrl, channelId, tParam) {
                 const abs = new URL(trim, base).href;
                 const enc = encodeURIComponent(Buffer.from(abs).toString('base64'));
                 
-                // Correção de Detecção Robusta: Identifica se o link é um segmento ou fluxo de vídeo contínuo
+                // DETECÇÃO INTELIGENTE: Captura tanto extensões físicas quanto rotas dinâmicas de IPTV
                 const isVideoSegment = /\.(ts|mp4|m4s|aac|mp3|m4a)(\?|$)/i.test(trim) || 
                                        trim.includes('/ts') || 
                                        trim.includes('/live/') || 
