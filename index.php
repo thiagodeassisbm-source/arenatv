@@ -1,18 +1,12 @@
 <?php
-// Carregar conexão com o banco de dados
 require_once __DIR__ . '/config/db.php';
 
-// Buscar estatísticas iniciais em tempo real
-$totalChannels = $pdo->query("SELECT COUNT(*) FROM channels")->fetchColumn();
-$sportsChannels = $pdo->query("SELECT COUNT(*) FROM channels WHERE is_sports = 1")->fetchColumn();
-$totalGames = $pdo->query("SELECT COUNT(*) FROM games")->fetchColumn();
-
-// Buscar URL M3U salva
-$stmt = $pdo->prepare("SELECT meta_value FROM settings WHERE meta_key = 'm3u_url'");
+// Buscar Nome do Site
+$stmt = $pdo->prepare("SELECT meta_value FROM settings WHERE meta_key = 'site_name'");
 $stmt->execute();
-$m3uUrl = $stmt->fetchColumn() ?: '';
+$siteName = $stmt->fetchColumn() ?: 'Arena Stream';
 
-// Buscar Jogos Agendados Ativos para a Grade
+// Buscar Jogos Agendados Ativos
 $sqlGames = "SELECT g.*, c.name AS channel_name, c.logo AS channel_logo 
              FROM games g 
              LEFT JOIN channels c ON g.channel_id = c.id 
@@ -20,313 +14,379 @@ $sqlGames = "SELECT g.*, c.name AS channel_name, c.logo AS channel_logo
              ORDER BY g.created_at DESC";
 $games = $pdo->query($sqlGames)->fetchAll(PDO::FETCH_ASSOC);
 
-// Buscar Todos os Canais Esportivos Cadastrados
-$sqlChannelsList = "SELECT id, name, logo, group_name FROM channels WHERE is_sports = 1 ORDER BY name ASC";
-$channelsList = $pdo->query($sqlChannelsList)->fetchAll(PDO::FETCH_ASSOC);
-
-// Incluir o Cabeçalho Premium
-require_once __DIR__ . '/includes/header.php';
+// Buscar Canais Esportivos Cadastrados
+$sqlChannels = "SELECT id, name, logo, group_name FROM channels WHERE is_sports = 1 ORDER BY name ASC";
+$channels = $pdo->query($sqlChannels)->fetchAll(PDO::FETCH_ASSOC);
 ?>
-
-<!-- ==========================================
-     ABAS DE CONTEÚDO (SPA STYLE)
-     ========================================== -->
-
-<!-- 1. ABA: VISÃO GERAL (OVERVIEW) -->
-<section id="tab-overview" class="tab-content active">
-    <!-- Grid de Estatísticas Rápidas -->
-    <div class="stats-grid">
-        <div class="stat-card">
-            <div class="stat-icon">
-                <i class="fa-solid fa-server"></i>
-            </div>
-            <div class="stat-info">
-                <h3>Total Canais</h3>
-                <div class="stat-value" id="stat-total-channels"><?php echo $totalChannels; ?></div>
-            </div>
-        </div>
-
-        <div class="stat-card">
-            <div class="stat-icon">
-                <i class="fa-solid fa-volleyball"></i>
-            </div>
-            <div class="stat-info">
-                <h3>Canais Esportivos</h3>
-                <div class="stat-value" id="stat-sports-channels"><?php echo $sportsChannels; ?></div>
-            </div>
-        </div>
-
-        <div class="stat-card accent-red">
-            <div class="stat-icon">
-                <i class="fa-solid fa-ticket"></i>
-            </div>
-            <div class="stat-info">
-                <h3>Jogos à Venda</h3>
-                <div class="stat-value" id="stat-total-games"><?php echo $totalGames; ?></div>
-            </div>
-        </div>
-    </div>
-
-    <!-- Guia de Inicialização Rápida -->
-    <div class="card">
-        <div class="card-header">
-            <h2><i class="fa-solid fa-wand-magic-sparkles"></i> Fluxo de Configuração Rápida</h2>
-        </div>
-        <div class="card-body" style="padding: 40px 30px;">
-            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 30px; position: relative;">
-                
-                <div style="text-align: center; position: relative; z-index: 1;">
-                    <div style="width: 60px; height: 60px; background: rgba(124, 58, 237, 0.1); border: 2px solid var(--color-purple); border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 15px; font-size: 20px; color: var(--color-purple-light); font-weight: 800;">1</div>
-                    <h3 style="font-size: 16px; margin-bottom: 8px;">Importe a Lista M3U</h3>
-                    <p style="font-size: 13px; color: var(--text-secondary); line-height: 1.5; max-width: 220px; margin: 0 auto;">Insira o link ou envie o arquivo da sua lista IPTV adquirida para alimentar o sistema.</p>
-                    <button onclick="switchTab('import')" class="btn btn-secondary" style="margin-top: 15px; padding: 8px 16px; font-size: 12px;"><i class="fa-solid fa-arrow-right"></i> Ir para Importação</button>
-                </div>
-
-                <div style="text-align: center; position: relative; z-index: 1;">
-                    <div style="width: 60px; height: 60px; background: rgba(124, 58, 237, 0.1); border: 2px solid var(--color-purple); border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 15px; font-size: 20px; color: var(--color-purple-light); font-weight: 800;">2</div>
-                    <h3 style="font-size: 16px; margin-bottom: 8px;">Selecione Canais Esportivos</h3>
-                    <p style="font-size: 13px; color: var(--text-secondary); line-height: 1.5; max-width: 220px; margin: 0 auto;">Marque os canais que deseja usar. Use nosso filtro inteligente automático para agilizar.</p>
-                    <button onclick="switchTab('channels')" class="btn btn-secondary" style="margin-top: 15px; padding: 8px 16px; font-size: 12px;"><i class="fa-solid fa-arrow-right"></i> Separar Canais</button>
-                </div>
-
-                <div style="text-align: center; position: relative; z-index: 1;">
-                    <div style="width: 60px; height: 60px; background: rgba(239, 68, 68, 0.1); border: 2px solid var(--color-red); border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 15px; font-size: 20px; color: var(--color-red); font-weight: 800;">3</div>
-                    <h3 style="font-size: 16px; margin-bottom: 8px;">Cadastre e Venda</h3>
-                    <p style="font-size: 13px; color: var(--text-secondary); line-height: 1.5; max-width: 220px; margin: 0 auto;">Crie o jogo de futebol, selecione o canal esportivo vinculado e coloque para vender!</p>
-                    <button onclick="switchTab('games')" class="btn btn-accent" style="margin-top: 15px; padding: 8px 16px; font-size: 12px;"><i class="fa-solid fa-bolt"></i> Criar Venda</button>
-                </div>
-                
-            </div>
-        </div>
-    </div>
-</section>
-
-<!-- 2. ABA: IMPORTAR M3U -->
-<section id="tab-import" class="tab-content">
-    <div class="import-container">
-        <!-- Esquerda: URL Form -->
-        <div class="card">
-            <div class="card-header">
-                <h2><i class="fa-solid fa-link"></i> Importar via URL M3U</h2>
-            </div>
-            <div class="card-body">
-                <form id="form-import-url" onsubmit="importM3uUrl(event)">
-                    <div class="form-group">
-                        <label class="form-label" for="m3u_url">Endereço (URL) da Lista M3U</label>
-                        <input type="text" id="m3u_url" name="m3u_url" class="form-control" placeholder="http://servidor.com/get.php?username=...&password=..." value="<?php echo htmlspecialchars($m3uUrl); ?>" required autocomplete="off" spellcheck="false">
-                        <p style="font-size: 11px; color: var(--text-secondary); margin-top: 6px;">Esta URL ficará salva localmente para atualizações rápidas posteriores.</p>
-                    </div>
-                    <button type="submit" class="btn btn-primary" style="width: 100%;">
-                        <i class="fa-solid fa-cloud-arrow-down"></i> Baixar e Importar Lista
-                    </button>
-                </form>
-            </div>
-        </div>
-
-        <!-- Direita: Envio de Arquivo M3U -->
-        <div class="card">
-            <div class="card-header">
-                <h2><i class="fa-solid fa-file-code"></i> Enviar Arquivo M3U</h2>
-            </div>
-            <div class="card-body">
-                <form id="form-import-file" onsubmit="importM3uFile(event)">
-                    <div class="form-group">
-                        <label class="form-label">Arquivo local .m3u ou .m3u8</label>
-                        <div class="file-drop-area" id="drop-zone">
-                            <i class="fa-solid fa-cloud-arrow-up"></i>
-                            <p style="font-size: 14px; font-weight: 600; margin-bottom: 4px;">Arraste o arquivo M3U aqui</p>
-                            <p style="font-size: 12px; color: var(--text-secondary);">ou clique para selecionar do computador</p>
-                            <input type="file" id="m3u_file" name="m3u_file" class="file-input" accept=".m3u,.m3u8" onchange="updateFileNameLabel(this)">
-                        </div>
-                        <p id="file-name-label" style="font-size: 12px; color: var(--color-success); margin-top: 8px; font-weight: 600; text-align: center; display: none;"></p>
-                    </div>
-                    <button type="submit" class="btn btn-secondary" style="width: 100%;" id="btn-submit-file" disabled>
-                        <i class="fa-solid fa-upload"></i> Processar Arquivo Selecionado
-                    </button>
-                </form>
-            </div>
-        </div>
-    </div>
-
-    <!-- Feedback e Indicador de Progresso de Importação -->
-    <div class="card import-status-card" id="import-status-container">
-        <div class="loader-container" id="import-loader">
-            <div class="spinner"></div>
-            <h3 style="margin-top: 20px; font-size: 16px;">Processando Lista M3U...</h3>
-            <p style="font-size: 13px; color: var(--text-secondary); margin-top: 6px; text-align: center;">Listas grandes (50 MB+) podem levar <strong>5 a 15 minutos</strong>. Mantenha o <code>iniciar.bat</code> aberto e não feche esta aba.</p>
-            <div class="progress-bar-container">
-                <div class="progress-bar" id="import-progress"></div>
-            </div>
-        </div>
-        
-        <div id="import-result" style="display: none; text-align: center; padding: 10px;">
-            <div id="import-result-icon" style="width: 55px; height: 55px; background: rgba(16, 185, 129, 0.1); border: 1.5px solid var(--color-success); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 20px; color: var(--color-success); margin: 0 auto 15px;">
-                <i class="fa-solid fa-check"></i>
-            </div>
-            <h3 id="result-title" style="font-size: 18px; margin-bottom: 6px;">Importação Concluída!</h3>
-            <p id="result-message" style="font-size: 14px; color: var(--text-secondary); margin-bottom: 20px;"></p>
-            
-            <div style="display: flex; gap: 15px; justify-content: center; max-width: 400px; margin: 0 auto;">
-                <button onclick="switchTab('channels')" class="btn btn-primary" style="flex: 1; font-size: 13px;">
-                    <i class="fa-solid fa-tv"></i> Ver Canais
-                </button>
-                <button onclick="resetImportForm()" class="btn btn-secondary" style="flex: 1; font-size: 13px;">
-                    Importar Outro
-                </button>
-            </div>
-        </div>
-    </div>
-</section>
-
-<!-- 3. ABA: GERENCIAR CANAIS -->
-<section id="tab-channels" class="tab-content">
-    <!-- Barra de Filtros e Pesquisa -->
-    <div class="filter-bar">
-        <div class="filter-inputs">
-            <div class="search-wrapper">
-                <i class="fa-solid fa-magnifying-glass"></i>
-                <input type="text" id="channel-search" class="form-control" placeholder="Buscar canal por nome..." oninput="filterChannels()">
-            </div>
-
-            <select id="channel-category-filter" class="form-select" onchange="filterByCategory()" style="min-width: 220px;">
-                <option value="">Todas as categorias</option>
-            </select>
-            
-            <button id="btn-filter-sports" class="btn btn-secondary" onclick="toggleSportsFilter()" style="font-size: 13px;">
-                <i class="fa-solid fa-filter"></i> Apenas Esportivos
-            </button>
-        </div>
-
-        <div class="filter-actions">
-            <button class="btn btn-secondary" onclick="dedupeChannels()" style="font-size: 13px;" title="Remove canais repetidos (mesmo nome na mesma categoria)">
-                <i class="fa-solid fa-broom"></i> Remover Duplicados
-            </button>
-            <button class="btn btn-accent" onclick="runAutoFilter()" style="font-size: 13px;" title="Filtra canais esportivos automaticamente usando inteligência por palavras-chave">
-                <i class="fa-solid fa-robot"></i> Auto-Filtrar Esportivos
-            </button>
-        </div>
-    </div>
-
-    <div id="category-chips" class="category-chips"></div>
-
-    <!-- Grid de Canais (Preenchido por JS) -->
-    <div class="channel-grid" id="channels-container">
-        <!-- Os canais serão renderizados dinamicamente pelo JS -->
-    </div>
-
-    <!-- Paginação -->
-    <div class="pagination" id="pagination-container">
-        <!-- Renderizado dinamicamente -->
-    </div>
-</section>
-
-<!-- 4. ABA: CADASTRAR/VENDER JOGOS -->
-<section id="tab-games" class="tab-content">
-    <div class="games-layout">
-        <!-- Painel Esquerdo: Formulário de Cadastro de Jogo -->
-        <div class="card">
-            <div class="card-header">
-                <h2 id="form-game-title"><i class="fa-solid fa-circle-plus"></i> Novo Jogo para Venda</h2>
-            </div>
-            <div class="card-body">
-                <form id="form-game" onsubmit="saveGame(event)">
-                    <!-- ID Oculto para Edição -->
-                    <input type="hidden" id="game_id" name="id" value="">
-
-                    <div class="form-group">
-                        <label class="form-label" for="game_name">Nome do Jogo *</label>
-                        <input type="text" id="game_name" name="name" class="form-control" placeholder="Ex: Flamengo vs Vasco" required>
-                    </div>
-
-                    <div class="form-group">
-                        <label class="form-label" for="game_description">Descrição / Informações *</label>
-                        <textarea id="game_description" name="description" class="form-control" placeholder="Ex: Campeonato Brasileiro - Rodada 10" required></textarea>
-                    </div>
-
-                    <div class="form-group">
-                        <label class="form-label" for="game_date">Data e Hora do Jogo *</label>
-                        <input type="datetime-local" id="game_date" name="game_date" class="form-control" required>
-                        <p style="font-size: 11px; color: var(--text-secondary); margin-top: 6px;">Escolha o dia e o horário em que a transmissão começará.</p>
-                    </div>
-
-                    <div class="form-group">
-                        <label class="form-label" for="game_channel_id">Canal Esportivo Vinculado *</label>
-                        <select id="game_channel_id" name="channel_id" class="form-select" required>
-                            <option value="">Carregando canais esportivos...</option>
-                        </select>
-                        <p style="font-size: 11px; color: var(--text-secondary); margin-top: 6px;">Esta lista exibe apenas os canais que você separou como <strong>Esportivo</strong> na aba anterior.</p>
-                    </div>
-
-                    <div class="form-group">
-                        <label class="form-label" for="game_price">Preço da Venda (R$)</label>
-                        <input type="text" id="game_price" name="price" class="form-control" placeholder="Ex: 10,00" value="0,00">
-                        <p style="font-size: 11px; color: var(--text-secondary); margin-top: 6px;">Digite zero (0,00) caso queira disponibilizar o canal gratuitamente.</p>
-                    </div>
-
-                    <div class="form-group">
-                        <label class="form-label" for="game_external_link">Link de Pagamento ou Checkout</label>
-                        <input type="url" id="game_external_link" name="external_link" class="form-control" placeholder="Ex: https://mpago.la/checkout...">
-                        <p style="font-size: 11px; color: var(--text-secondary); margin-top: 6px;">Link do gateway de pagamento (Mercado Pago, Stripe, etc.) para o cliente comprar o jogo.</p>
-                    </div>
-
-                    <div class="form-group">
-                        <label class="form-label" for="game_status">Status</label>
-                        <select id="game_status" name="status" class="form-select">
-                            <option value="ativo" selected>Disponível / Ativo</option>
-                            <option value="inativo">Pausado / Inativo</option>
-                        </select>
-                    </div>
-
-                    <div style="display: flex; gap: 10px; margin-top: 30px;">
-                        <button type="submit" class="btn btn-accent" style="flex: 1;">
-                            <i class="fa-solid fa-save"></i> <span id="btn-save-text">Colocar para Venda</span>
-                        </button>
-                        <button type="button" id="btn-cancel-edit" class="btn btn-secondary" onclick="resetGameForm()" style="display: none;">
-                            Cancelar
-                        </button>
-                    </div>
-                </form>
-            </div>
-        </div>
-
-        <!-- Painel Direito: Jogos já Cadastrados -->
-        <div style="display: flex; flex-direction: column; gap: 20px;">
-            <div style="display: flex; justify-content: space-between; align-items: center;">
-                <h2 style="font-size: 18px; font-weight: 700; color: #fff;"><i class="fa-solid fa-rectangle-list"></i> Jogos Cadastrados</h2>
-                <span style="font-size: 12px; background: rgba(239, 68, 68, 0.1); color: var(--color-red); padding: 4px 10px; border-radius: 20px; font-weight: 700; border: 1px solid rgba(239, 68, 68, 0.2);">AO VIVO</span>
-            </div>
-            
-            <div class="games-list-wrapper" id="games-list-container">
-                <!-- Os ingressos de jogos serão renderizados dinamicamente pelo JS -->
-            </div>
-        </div>
-    </div>
-</section>
-
-<!-- 5. ABA: GRADE E CALENDÁRIO -->
-<section id="tab-calendar" class="tab-content">
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Grade de Programação | <?php echo htmlspecialchars($siteName); ?></title>
+    
+    <!-- Google Fonts: Outfit -->
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <!-- FontAwesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
     <style>
-        /* Estilos locais premium para o Calendário Integrado */
-        .tabs-container-integrated {
-            width: 100%;
-            margin-bottom: 30px;
+        :root {
+            --bg-dark: #07040e;
+            --bg-deep: #0a0615;
+            --bg-card: rgba(22, 14, 43, 0.6);
+            --color-purple: #7c3aed;
+            --color-purple-light: #a78bfa;
+            --color-red: #ef4444;
+            --color-success: #10b981;
+            --text-primary: #f3f4f6;
+            --text-secondary: #9ca3af;
+            --border: rgba(124, 58, 237, 0.15);
         }
 
-        .tab-switcher-integrated {
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Outfit', sans-serif;
+        }
+
+        body {
+            background: radial-gradient(circle at top, #1b0c30 0%, var(--bg-dark) 100%);
+            color: var(--text-primary);
+            min-height: 100vh;
             display: flex;
+            flex-direction: column;
+            overflow-x: hidden;
+        }
+
+        /* Topbar */
+        .topbar {
+            background: rgba(14, 8, 34, 0.85);
+            backdrop-filter: blur(12px);
+            border-bottom: 1px solid var(--border);
+            padding: 15px 40px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        .brand {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            text-decoration: none;
+        }
+
+        .logo-icon {
+            width: 38px;
+            height: 38px;
+            background: linear-gradient(135deg, var(--color-purple), var(--color-red));
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #fff;
+            font-size: 18px;
+            box-shadow: 0 0 15px rgba(124, 58, 237, 0.4);
+        }
+
+        .brand-text h2 {
+            font-size: 18px;
+            font-weight: 800;
+            letter-spacing: 0.5px;
+            background: linear-gradient(to right, #fff, #a78bfa);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .brand-text span {
+            font-size: 10px;
+            font-weight: 600;
+            color: var(--color-red);
+            letter-spacing: 2px;
+            text-transform: uppercase;
+            display: block;
+            margin-top: -3px;
+        }
+
+        .btn-admin {
+            background: rgba(124, 58, 237, 0.15);
+            color: var(--color-purple-light);
+            border: 1px solid var(--border);
+            text-decoration: none;
+            padding: 8px 18px;
+            border-radius: 8px;
+            font-size: 13px;
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            transition: all 0.25s;
+        }
+
+        .btn-admin:hover {
+            background: var(--color-purple);
+            color: #fff;
+            box-shadow: 0 0 15px rgba(124, 58, 237, 0.3);
+        }
+
+        /* Hero Banner Premium */
+        .hero-banner {
+            max-width: 1200px;
+            width: 100%;
+            margin: 45px auto 25px;
+            padding: 0 20px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 50px;
+            min-height: 440px;
+            position: relative;
+        }
+
+        .hero-banner-content {
+            flex: 1.2;
+            max-width: 620px;
+            text-align: left;
+            z-index: 2;
+        }
+
+        .hero-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            background: rgba(239, 68, 68, 0.15);
+            border: 1px solid rgba(239, 68, 68, 0.3);
+            color: #ff6b6b;
+            padding: 6px 14px;
+            border-radius: 20px;
+            font-size: 11px;
+            font-weight: 800;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 22px;
+            animation: blink 2s infinite;
+        }
+
+        .hero-banner-content h1 {
+            font-size: 48px;
+            font-weight: 900;
+            line-height: 1.15;
+            letter-spacing: -1.2px;
+            margin-bottom: 20px;
+            background: linear-gradient(135deg, #ffffff 40%, #c084fc 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .hero-banner-content p {
+            font-size: 15px;
+            color: var(--text-secondary);
+            line-height: 1.65;
+            margin-bottom: 32px;
+        }
+
+        .hero-actions {
+            display: flex;
+            gap: 16px;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+
+        .btn-hero-primary {
+            background: linear-gradient(135deg, var(--color-purple), var(--color-red));
+            color: #fff;
+            border: none;
+            padding: 14px 28px;
+            font-weight: 800;
+            font-size: 14px;
+            border-radius: 10px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            box-shadow: 0 6px 18px rgba(239, 68, 68, 0.3);
+            transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+
+        .btn-hero-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 25px rgba(239, 68, 68, 0.45);
+        }
+
+        .btn-hero-secondary {
+            background: rgba(255, 255, 255, 0.04);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            color: var(--text-primary);
+            padding: 14px 28px;
+            font-weight: 800;
+            font-size: 14px;
+            border-radius: 10px;
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            transition: all 0.25s;
+        }
+
+        .btn-hero-secondary:hover {
+            background: rgba(255, 255, 255, 0.08);
+            border-color: rgba(255, 255, 255, 0.15);
+            color: #fff;
+        }
+
+        .hero-banner-image {
+            flex: 0.9;
+            position: relative;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 1;
+        }
+
+        .hero-banner-image img {
+            width: 100%;
+            max-width: 440px;
+            height: auto;
+            border-radius: 24px;
+            mask-image: linear-gradient(to bottom, rgba(0,0,0,1) 85%, rgba(0,0,0,0) 100%);
+            -webkit-mask-image: linear-gradient(to bottom, rgba(0,0,0,1) 85%, rgba(0,0,0,0) 100%);
+            filter: drop-shadow(0 15px 30px rgba(124, 58, 237, 0.3));
+            animation: floatImage 6s ease-in-out infinite;
+        }
+
+        .image-overlay-glow {
+            position: absolute;
+            width: 300px;
+            height: 300px;
+            background: radial-gradient(circle, rgba(124, 58, 237, 0.3) 0%, rgba(239, 68, 68, 0) 70%);
+            z-index: -1;
+            filter: blur(40px);
+        }
+
+        @keyframes floatImage {
+            0% { transform: translateY(0px); }
+            50% { transform: translateY(-12px); }
+            100% { transform: translateY(0px); }
+        }
+
+        /* Carrossel de Ligas Premium */
+        .leagues-container {
+            max-width: 1200px;
+            width: 100%;
+            margin: 15px auto 40px;
+            padding: 0 20px;
+            overflow-x: auto;
+            scrollbar-width: none;
+        }
+
+        .leagues-container::-webkit-scrollbar {
+            display: none;
+        }
+
+        .leagues-wrapper {
+            display: flex;
+            gap: 12px;
+            white-space: nowrap;
+        }
+
+        .league-chip {
+            background: rgba(22, 14, 43, 0.5);
+            border: 1px solid var(--border);
+            color: var(--text-secondary);
+            padding: 10px 20px;
+            border-radius: 12px;
+            font-size: 13px;
+            font-weight: 700;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            transition: all 0.2s ease;
+        }
+
+        .league-chip:hover {
+            background: rgba(124, 58, 237, 0.15);
+            border-color: rgba(124, 58, 237, 0.3);
+            color: #fff;
+        }
+
+        .league-chip.active {
+            background: var(--color-purple);
+            border-color: var(--color-purple);
+            color: #fff;
+            box-shadow: 0 0 15px rgba(124, 58, 237, 0.35);
+        }
+
+        /* Badge de Horário Amarelo */
+        .badge-time {
+            background: linear-gradient(135deg, #facc15, #eab308);
+            color: #000;
+            font-size: 10px;
+            font-weight: 900;
+            padding: 4px 10px;
+            border-radius: 6px;
+            letter-spacing: 0.5px;
+            text-transform: uppercase;
+            box-shadow: 0 2px 8px rgba(234, 179, 8, 0.3);
+        }
+
+        @media (max-width: 992px) {
+            .hero-banner {
+                flex-direction: column;
+                text-align: center;
+                gap: 40px;
+                margin-top: 15px;
+            }
+
+            .hero-banner-content {
+                max-width: 100%;
+                display: flex;
+                flex-direction: column;
+                align-items: center;
+            }
+
+            .hero-banner-content h1 {
+                font-size: 36px;
+            }
+
+            .hero-actions {
+                justify-content: center;
+            }
+
+            .hero-banner-image img {
+                max-width: 340px;
+            }
+        }
+
+        /* Container Tabs Toggle */
+        .tabs-container {
+            max-width: 1200px;
+            width: 100%;
+            margin: 0 auto 40px;
+            padding: 0 20px;
+        }
+
+        .tab-switcher {
+            display: flex;
+            justify-content: center;
             gap: 15px;
-            margin-bottom: 25px;
+            margin-bottom: 35px;
             border-bottom: 1px solid rgba(255,255,255,0.06);
             padding-bottom: 15px;
         }
 
-        .tab-btn-integrated {
+        .tab-btn {
             background: none;
             border: none;
             color: var(--text-secondary);
             font-size: 15px;
             font-weight: 700;
-            padding: 8px 20px;
+            padding: 8px 24px;
             cursor: pointer;
             position: relative;
             transition: color 0.2s;
@@ -335,11 +395,11 @@ require_once __DIR__ . '/includes/header.php';
             gap: 8px;
         }
 
-        .tab-btn-integrated.active {
+        .tab-btn.active {
             color: #fff;
         }
 
-        .tab-btn-integrated.active::after {
+        .tab-btn.active::after {
             content: '';
             position: absolute;
             bottom: -16px;
@@ -350,43 +410,43 @@ require_once __DIR__ . '/includes/header.php';
             border-radius: 10px;
         }
 
-        .sub-tab-content {
+        .tab-content {
             display: none;
         }
 
-        .sub-tab-content.active {
+        .tab-content.active {
             display: block;
-            animation: fadeInIntegrated 0.4s ease-out forwards;
+            animation: fadeIn 0.4s ease-out forwards;
         }
 
         /* Grid de Jogos Agendados */
-        .games-grid-integrated {
+        .games-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
-            gap: 20px;
+            grid-template-columns: repeat(auto-fill, minmax(360px, 1fr));
+            gap: 25px;
         }
 
-        .game-ticket-integrated {
+        .game-ticket {
             background: var(--bg-card);
             backdrop-filter: blur(12px);
             border: 1px solid var(--border);
-            border-radius: 16px;
+            border-radius: 20px;
             overflow: hidden;
             display: flex;
             flex-direction: column;
-            box-shadow: 0 8px 20px rgba(0,0,0,0.3);
+            box-shadow: 0 10px 25px rgba(0,0,0,0.3);
             transition: transform 0.25s, border-color 0.25s, box-shadow 0.25s;
             position: relative;
         }
 
-        .game-ticket-integrated:hover {
+        .game-ticket:hover {
             transform: translateY(-4px);
             border-color: rgba(124, 58, 237, 0.35);
-            box-shadow: 0 12px 25px rgba(124, 58, 237, 0.15);
+            box-shadow: 0 15px 35px rgba(124, 58, 237, 0.15);
         }
 
-        .ticket-header-integrated {
-            padding: 12px 18px;
+        .ticket-header {
+            padding: 16px 20px;
             background: rgba(7, 4, 14, 0.4);
             border-bottom: 1px solid rgba(255,255,255,0.04);
             display: flex;
@@ -394,15 +454,15 @@ require_once __DIR__ . '/includes/header.php';
             align-items: center;
         }
 
-        .broadcaster-integrated {
+        .broadcaster {
             display: flex;
             align-items: center;
             gap: 8px;
         }
 
-        .broadcaster-logo-integrated {
-            width: 26px;
-            height: 26px;
+        .broadcaster-logo {
+            width: 28px;
+            height: 28px;
             background: rgba(255,255,255,0.05);
             border-radius: 6px;
             display: flex;
@@ -412,36 +472,36 @@ require_once __DIR__ . '/includes/header.php';
             border: 1px solid rgba(255,255,255,0.08);
         }
 
-        .broadcaster-logo-integrated img {
+        .broadcaster-logo img {
             max-width: 100%;
             max-height: 100%;
             object-fit: contain;
         }
 
-        .broadcaster-name-integrated {
-            font-size: 10px;
+        .broadcaster-name {
+            font-size: 11px;
             font-weight: 700;
             color: var(--color-purple-light);
             text-transform: uppercase;
             letter-spacing: 0.5px;
         }
 
-        .badge-live-integrated {
+        .badge-live {
             background: var(--color-red);
             color: #fff;
-            font-size: 8px;
+            font-size: 9px;
             font-weight: 800;
-            padding: 2px 6px;
+            padding: 3px 8px;
             border-radius: 4px;
-            letter-spacing: 0.5px;
+            letter-spacing: 1px;
             display: flex;
             align-items: center;
             gap: 4px;
-            animation: blinkIntegrated 1.5s infinite;
+            animation: blink 1.5s infinite;
         }
 
-        .ticket-body-integrated {
-            padding: 20px 18px;
+        .ticket-body {
+            padding: 24px 20px;
             flex-grow: 1;
             display: flex;
             flex-direction: column;
@@ -449,173 +509,173 @@ require_once __DIR__ . '/includes/header.php';
             text-align: center;
         }
 
-        .match-title-integrated {
-            font-size: 16px;
+        .match-title {
+            font-size: 18px;
             font-weight: 800;
             color: #fff;
-            margin-bottom: 8px;
+            margin-bottom: 10px;
             line-height: 1.3;
         }
 
-        .match-desc-integrated {
-            font-size: 12px;
+        .match-desc {
+            font-size: 13px;
             color: var(--text-secondary);
             line-height: 1.5;
         }
 
-        .ticket-footer-integrated {
-            padding: 16px 18px;
+        .ticket-footer {
+            padding: 20px;
             background: rgba(7, 4, 14, 0.4);
             border-top: 1px solid rgba(255,255,255,0.04);
             display: flex;
             align-items: center;
             justify-content: space-between;
-            gap: 10px;
+            gap: 15px;
         }
 
-        .price-box-integrated {
+        .price-box {
             display: flex;
             flex-direction: column;
         }
 
-        .price-label-integrated {
-            font-size: 8px;
+        .price-label {
+            font-size: 9px;
             color: var(--text-secondary);
             text-transform: uppercase;
             letter-spacing: 0.5px;
         }
 
-        .price-value-integrated {
-            font-size: 16px;
+        .price-value {
+            font-size: 18px;
             font-weight: 800;
             color: #fff;
         }
 
-        .price-value-integrated.free {
+        .price-value.free {
             color: var(--color-success);
         }
 
-        .btn-ticket-integrated {
+        .btn-ticket {
             background: linear-gradient(135deg, var(--color-purple), var(--color-purple-light));
             color: #fff;
             border: none;
-            border-radius: 6px;
-            padding: 8px 16px;
+            border-radius: 8px;
+            padding: 10px 20px;
             font-weight: 700;
-            font-size: 12px;
+            font-size: 13px;
             cursor: pointer;
             display: flex;
             align-items: center;
-            gap: 6px;
+            gap: 8px;
             text-decoration: none;
             transition: all 0.2s;
         }
 
-        .btn-ticket-integrated:hover {
+        .btn-ticket:hover {
             transform: scale(1.03);
-            box-shadow: 0 0 12px rgba(124, 58, 237, 0.35);
+            box-shadow: 0 0 15px rgba(124, 58, 237, 0.35);
         }
 
-        .btn-ticket-integrated.buy {
+        .btn-ticket.buy {
             background: linear-gradient(135deg, var(--color-purple), var(--color-red));
         }
 
-        .btn-ticket-integrated.buy:hover {
-            box-shadow: 0 0 12px rgba(239, 68, 68, 0.35);
+        .btn-ticket.buy:hover {
+            box-shadow: 0 0 15px rgba(239, 68, 68, 0.35);
         }
 
         /* Grid de Canais Cadastrados */
-        .channels-grid-integrated {
+        .channels-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
-            gap: 15px;
+            grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+            gap: 20px;
         }
 
-        .channel-card-integrated {
+        .channel-card {
             background: var(--bg-card);
             backdrop-filter: blur(12px);
             border: 1px solid var(--border);
-            border-radius: 12px;
-            padding: 15px;
+            border-radius: 16px;
+            padding: 20px;
             display: flex;
             flex-direction: column;
             align-items: center;
             text-align: center;
-            box-shadow: 0 6px 15px rgba(0,0,0,0.2);
+            box-shadow: 0 8px 20px rgba(0,0,0,0.2);
             transition: all 0.25s;
         }
 
-        .channel-card-integrated:hover {
+        .channel-card:hover {
             transform: translateY(-3px);
             border-color: rgba(124, 58, 237, 0.3);
-            box-shadow: 0 8px 20px rgba(124, 58, 237, 0.1);
+            box-shadow: 0 12px 25px rgba(124, 58, 237, 0.1);
         }
 
-        .channel-logo-integrated {
-            width: 48px;
-            height: 48px;
+        .channel-logo {
+            width: 55px;
+            height: 55px;
             background: rgba(255,255,255,0.05);
-            border-radius: 8px;
+            border-radius: 12px;
             display: flex;
             align-items: center;
             justify-content: center;
             overflow: hidden;
-            margin-bottom: 10px;
+            margin-bottom: 12px;
             border: 1px solid rgba(255,255,255,0.08);
         }
 
-        .channel-logo-integrated img {
+        .channel-logo img {
             max-width: 80%;
             max-height: 80%;
             object-fit: contain;
         }
 
-        .channel-logo-integrated i {
-            font-size: 18px;
+        .channel-logo i {
+            font-size: 22px;
             color: var(--color-purple-light);
         }
 
-        .channel-name-integrated {
-            font-size: 13px;
+        .channel-name {
+            font-size: 14px;
             font-weight: 700;
             color: #fff;
             margin-bottom: 4px;
             line-height: 1.3;
         }
 
-        .channel-group-integrated {
-            font-size: 10px;
+        .channel-group {
+            font-size: 11px;
             color: var(--text-secondary);
             text-transform: uppercase;
             letter-spacing: 0.5px;
-            margin-bottom: 12px;
+            margin-bottom: 15px;
         }
 
-        .btn-play-channel-integrated {
+        .btn-play-channel {
             background: rgba(255,255,255,0.05);
             color: #fff;
             border: 1px solid rgba(255,255,255,0.1);
             border-radius: 6px;
-            padding: 6px 12px;
+            padding: 8px 16px;
             font-weight: 600;
-            font-size: 11px;
+            font-size: 12px;
             cursor: pointer;
             width: 100%;
             display: flex;
             align-items: center;
             justify-content: center;
-            gap: 5px;
+            gap: 6px;
             transition: all 0.2s;
         }
 
-        .btn-play-channel-integrated:hover {
+        .btn-play-channel:hover {
             background: var(--color-purple);
             border-color: var(--color-purple);
-            box-shadow: 0 0 8px rgba(124, 58, 237, 0.3);
+            box-shadow: 0 0 10px rgba(124, 58, 237, 0.3);
         }
 
         /* Modal de Vídeo Flutuante */
-        .modal-integrated {
+        .modal {
             position: fixed;
             top: 0;
             left: 0;
@@ -623,7 +683,7 @@ require_once __DIR__ . '/includes/header.php';
             height: 100%;
             background: rgba(7, 4, 14, 0.85);
             backdrop-filter: blur(10px);
-            z-index: 10000;
+            z-index: 1000;
             display: flex;
             align-items: center;
             justify-content: center;
@@ -632,12 +692,12 @@ require_once __DIR__ . '/includes/header.php';
             transition: opacity 0.3s;
         }
 
-        .modal-integrated.active {
+        .modal.active {
             opacity: 1;
             pointer-events: auto;
         }
 
-        .modal-content-integrated {
+        .modal-content {
             background: #000;
             border-radius: 20px;
             width: 90%;
@@ -651,17 +711,17 @@ require_once __DIR__ . '/includes/header.php';
             transition: transform 0.3s;
         }
 
-        .modal-integrated.active .modal-content-integrated {
+        .modal.active .modal-content {
             transform: scale(1);
         }
 
-        .modal-iframe-integrated {
+        .modal-iframe {
             width: 100%;
             height: 100%;
             border: none;
         }
 
-        .btn-close-modal-integrated {
+        .btn-close-modal {
             position: absolute;
             top: 15px;
             right: 15px;
@@ -680,101 +740,342 @@ require_once __DIR__ . '/includes/header.php';
             transition: all 0.2s;
         }
 
-        .btn-close-modal-integrated:hover {
+        .btn-close-modal:hover {
             background: var(--color-red);
             border-color: var(--color-red);
             transform: rotate(90deg);
         }
 
-        @keyframes fadeInIntegrated {
+        /* Estado Vazio */
+        .empty-state {
+            text-align: center;
+            padding: 50px;
+            color: var(--text-secondary);
+        }
+
+        .empty-state i {
+            font-size: 40px;
+            color: rgba(124, 58, 237, 0.2);
+            margin-bottom: 15px;
+        }
+
+        .empty-state h3 {
+            font-size: 16px;
+            font-weight: 700;
+            color: #fff;
+            margin-bottom: 6px;
+        }
+
+        .empty-state p {
+            font-size: 13px;
+        }
+
+        /* Animações */
+        @keyframes fadeIn {
             from { opacity: 0; transform: translateY(10px); }
             to { opacity: 1; transform: translateY(0); }
         }
 
-        @keyframes blinkIntegrated {
+        @keyframes blink {
             0% { opacity: 1; }
             50% { opacity: 0.5; }
             100% { opacity: 1; }
         }
     </style>
+</head>
+<body>
+    
+    <!-- Topbar -->
+    <header class="topbar">
+        <a href="index.php" class="brand">
+            <div class="logo-icon">
+                <i class="fa-solid fa-circle-play"></i>
+            </div>
+            <div class="brand-text">
+                <h2>ARENA</h2>
+                <span>STREAM</span>
+            </div>
+        </a>
+        
+        <a href="admin.php" class="btn-admin">
+            <i class="fa-solid fa-user-gear"></i> Painel Admin
+        </a>
+    </header>
 
-    <div class="tabs-container-integrated">
-        <div class="tab-switcher-integrated">
-            <button class="tab-btn-integrated active" onclick="switchCalendarSubTab('games')">
-                <i class="fa-solid fa-ticket"></i> Jogos Agendados
-            </button>
-            <button class="tab-btn-integrated" onclick="switchCalendarSubTab('channels')">
-                <i class="fa-solid fa-tv"></i> Grade de Canais (<span id="integrated-channels-count">0</span>)
-            </button>
-        </div>
-
-        <!-- SUBABA 1: Jogos Agendados -->
-        <div id="subtab-content-games" class="sub-tab-content active">
-            <div class="games-grid-integrated" id="integrated-games-container">
-                <!-- Renderizado dinamicamente por JS -->
+    <!-- Hero Banner Premium -->
+    <section class="hero-banner">
+        <div class="hero-banner-content">
+            <div class="hero-badge">
+                <i class="fa-solid fa-bolt"></i> Cobertura Exclusiva Ao Vivo
+            </div>
+            <h1>Melhores Momentos e Jogos Grátis e Premium</h1>
+            <p>Gols, destaques e grandes momentos da LALIGA, Brasileirão, UEFA Champions League, Premier League, Libertadores e muito mais com a melhor qualidade de transmissão.</p>
+            <div class="hero-actions">
+                <button onclick="scrollToGames()" class="btn-hero-primary">
+                    <i class="fa-solid fa-circle-play"></i> Assistir Agora
+                </button>
+                <a href="admin.php" class="btn-hero-secondary">
+                    <i class="fa-solid fa-user-gear"></i> Painel Admin
+                </a>
             </div>
         </div>
+        <div class="hero-banner-image">
+            <img src="assets/images/football_stars_hero.png" alt="Craques do Futebol">
+            <div class="image-overlay-glow"></div>
+        </div>
+    </section>
 
-        <!-- SUBABA 2: Grade de Canais -->
-        <div id="subtab-content-channels" class="sub-tab-content">
-            <div class="channels-grid-integrated" id="integrated-channels-container">
-                <!-- Renderizado dinamicamente por JS -->
+    <!-- Leagues Horizontal Switcher -->
+    <div class="leagues-container" id="leagues-anchor">
+        <div class="leagues-wrapper">
+            <div class="league-chip active" onclick="filterByLeague('all')">
+                <i class="fa-solid fa-trophy"></i> Todos os Jogos
             </div>
+            <div class="league-chip" onclick="filterByLeague('champions')">
+                <i class="fa-solid fa-star"></i> Champions League
+            </div>
+            <div class="league-chip" onclick="filterByLeague('brasileirao')">
+                <i class="fa-solid fa-shield-halved"></i> Brasileirão
+            </div>
+            <div class="league-chip" onclick="filterByLeague('laliga')">
+                <i class="fa-solid fa-futbol"></i> LaLiga
+            </div>
+            <div class="league-chip" onclick="filterByLeague('premier')">
+                <i class="fa-solid fa-crown"></i> Premier League
+            </div>
+            <div class="league-chip" onclick="filterByLeague('libertadores')">
+                <i class="fa-solid fa-earth-americas"></i> Libertadores
+            </div>
+        </div>
+      <!-- Próximas Transmissões Cadastradas -->
+    <div class="tabs-container">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px; border-bottom: 1px solid rgba(255,255,255,0.06); padding-bottom: 15px;">
+            <h2 style="font-size: 22px; font-weight: 800; color: #fff; display: flex; align-items: center; gap: 10px;">
+                <i class="fa-solid fa-calendar-days" style="color: var(--color-purple-light);"></i> Próximas Transmissões Cadastradas
+            </h2>
+        </div>
+
+        <!-- Jogos Agendados -->
+        <div id="tab-content-games" class="tab-content active">
+            <?php if (empty($games)): ?>
+                <div class="empty-state">
+                    <i class="fa-solid fa-calendar-xmark"></i>
+                    <h3>Nenhum Jogo Agendado</h3>
+                    <p>Não há partidas ativas programadas para venda ou transmissão neste momento. Volte mais tarde!</p>
+                </div>
+            <?php else: ?>
+                <div class="games-grid">
+                    <?php foreach ($games as $game): ?>
+                        <?php
+                        // 1. Classificação de Liga do Jogo
+                        $gameLeague = 'other';
+                        $searchStr = mb_strtolower($game['name'] . ' ' . $game['description'], 'UTF-8');
+                        if (str_contains($searchStr, 'champions') || str_contains($searchStr, 'uefa')) {
+                            $gameLeague = 'champions';
+                        } else if (str_contains($searchStr, 'brasileirao') || str_contains($searchStr, 'brasileirão') || str_contains($searchStr, 'série a')) {
+                            $gameLeague = 'brasileirao';
+                        } else if (str_contains($searchStr, 'laliga') || str_contains($searchStr, 'la liga') || str_contains($searchStr, 'espanhol')) {
+                            $gameLeague = 'laliga';
+                        } else if (str_contains($searchStr, 'premier') || str_contains($searchStr, 'inglês') || str_contains($searchStr, 'ingles')) {
+                            $gameLeague = 'premier';
+                        } else if (str_contains($searchStr, 'libertadores') || str_contains($searchStr, 'conmebol')) {
+                            $gameLeague = 'libertadores';
+                        }
+
+                        // 2. Formatação Premium de Data/Hora (Estilo DAZN)
+                        $badgeTime = '';
+                        $formattedDate = '';
+                        if (!empty($game['game_date'])) {
+                            try {
+                                $date = new DateTime($game['game_date']);
+                                $now = new DateTime();
+                                
+                                // Formatar data padrão
+                                $formattedDate = $date->format('d/m') . ' às ' . $date->format('H:i');
+                                
+                                // Diferença em dias absolutos
+                                $todayStr = $now->format('Y-m-d');
+                                $gameDayStr = $date->format('Y-m-d');
+                                
+                                if ($todayStr === $gameDayStr) {
+                                    $badgeTime = 'HOJE ' . $date->format('H:i');
+                                } else {
+                                    $tomorrow = clone $now;
+                                    $tomorrow->modify('+1 day');
+                                    if ($tomorrow->format('Y-m-d') === $gameDayStr) {
+                                        $badgeTime = 'AMANHÃ ' . $date->format('H:i');
+                                    } else {
+                                        $daysOfWeek = [
+                                            0 => 'DOM',
+                                            1 => 'SEG',
+                                            2 => 'TER',
+                                            3 => 'QUA',
+                                            4 => 'QUI',
+                                            5 => 'SEX',
+                                            6 => 'SÁB'
+                                        ];
+                                        $badgeTime = $daysOfWeek[(int)$date->format('w')] . ' ' . $date->format('H:i');
+                                    }
+                                }
+                            } catch (Exception $e) {
+                                $badgeTime = 'EM BREVE';
+                            }
+                        } else {
+                            $badgeTime = 'NO AR';
+                        }
+                        ?>
+                        <div class="game-ticket" data-league="<?php echo $gameLeague; ?>">
+                            <div class="ticket-header">
+                                <div class="broadcaster">
+                                    <div class="broadcaster-logo">
+                                        <?php if ($game['channel_logo']): ?>
+                                            <img src="<?php echo htmlspecialchars($game['channel_logo']); ?>" alt="Logo">
+                                        <?php else: ?>
+                                            <i class="fa-solid fa-tv" style="font-size: 11px; color: var(--color-purple-light);"></i>
+                                        <?php endif; ?>
+                                    </div>
+                                    <span class="broadcaster-name"><?php echo htmlspecialchars($game['channel_name'] ?: 'Transmissão Direta'); ?></span>
+                                </div>
+                                <?php if ($badgeTime === 'NO AR' || empty($game['game_date'])): ?>
+                                    <div class="badge-live">
+                                        <i class="fa-solid fa-circle" style="font-size: 6px;"></i> NO AR
+                                    </div>
+                                <?php else: ?>
+                                    <div class="badge-time">
+                                        <i class="fa-solid fa-clock" style="font-size: 10px; margin-right: 3px;"></i> <?php echo $badgeTime; ?>
+                                    </div>
+                                <?php endif; ?>
+                            </div>
+                            
+                            <div class="ticket-body">
+                                <h3 class="match-title"><?php echo htmlspecialchars($game['name']); ?></h3>
+                                <?php if (!empty($formattedDate)): ?>
+                                    <div class="game-ticket-date" style="font-size: 11px; color: var(--color-purple-light); font-weight: 700; margin-bottom: 8px; display: flex; align-items: center; justify-content: center; gap: 6px;">
+                                        <i class="fa-solid fa-calendar-days"></i> <?php echo $formattedDate; ?>
+                                    </div>
+                                <?php endif; ?>
+                                <p class="match-desc"><?php echo nl2br(htmlspecialchars($game['description'])); ?></p>
+                            </div>
+                            
+                            <div class="ticket-footer">
+                                <div class="price-box">
+                                    <span class="price-label">Ingresso</span>
+                                    <?php if ($game['price'] > 0): ?>
+                                        <span class="price-value">R$ <?php echo number_format($game['price'], 2, ',', '.'); ?></span>
+                                    <?php else: ?>
+                                        <span class="price-value free">GRÁTIS</span>
+                                    <?php endif; ?>
+                                </div>
+                                
+                                <?php if ($game['price'] > 0): ?>
+                                    <a href="assistir.php?jogo=<?php echo $game['id']; ?>" class="btn-ticket buy">
+                                        <i class="fa-solid fa-ticket"></i> Adquirir Acesso
+                                    </a>
+                                <?php else: ?>
+                                    <button onclick="playMatch(<?php echo $game['id']; ?>)" class="btn-ticket">
+                                        <i class="fa-solid fa-circle-play"></i> Assistir Agora
+                                    </button>
+                                <?php endif; ?>
+                            </div>
+                        </div>
+                    <?php endforeach; ?>
+                </div>
+            <?php endif; ?>
         </div>
     </div>
 
-    <!-- Modal Integrado de Vídeo -->
-    <div id="player-modal-integrated" class="modal-integrated" onclick="closePlayerModalIntegrated(event)">
-        <div class="modal-content-integrated" onclick="event.stopPropagation()">
-            <button class="btn-close-modal-integrated" onclick="closePlayerModalIntegrated(event)">
+    <!-- Modal do Player -->
+    <div id="player-modal" class="modal" onclick="closePlayerModal(event)">
+        <div class="modal-content" onclick="event.stopPropagation()">
+            <button class="btn-close-modal" onclick="closePlayerModal(event)">
                 <i class="fa-solid fa-xmark"></i>
             </button>
-            <iframe id="player-iframe-integrated" class="modal-iframe-integrated" src=""></iframe>
+            <iframe id="player-iframe" class="modal-iframe" src=""></iframe>
         </div>
     </div>
 
     <script>
-        // Alternar sub-abas do calendário
-        function switchCalendarSubTab(subTabId) {
-            document.querySelectorAll('.tab-btn-integrated').forEach(btn => btn.classList.remove('active'));
-            document.querySelectorAll('.sub-tab-content').forEach(content => content.classList.remove('active'));
-            
-            if (subTabId === 'games') {
-                document.querySelector('.tab-btn-integrated:nth-child(1)').classList.add('active');
-                document.getElementById('subtab-content-games').classList.add('active');
-            } else {
-                document.querySelector('.tab-btn-integrated:nth-child(2)').classList.add('active');
-                document.getElementById('subtab-content-channels').classList.add('active');
+        // Rolar suavemente até a grade de jogos
+        function scrollToGames() {
+            const anchor = document.getElementById('leagues-anchor');
+            if (anchor) {
+                anchor.scrollIntoView({ behavior: 'smooth' });
             }
         }
 
-        // Assistir Jogo Grátis
-        function playMatchIntegrated(gameId) {
-            const modal = document.getElementById('player-modal-integrated');
-            const iframe = document.getElementById('player-iframe-integrated');
-            iframe.src = 'assistir.php?jogo=' + gameId;
-            modal.classList.add('active');
+        // Filtrar jogos por liga na hora (instantâneo)
+        function filterByLeague(league) {
+            // Atualizar o chip ativo
+            document.querySelectorAll('.league-chip').forEach(chip => {
+                chip.classList.remove('active');
+            });
+            event.currentTarget.classList.add('active');
+
+            // Exibir/Esconder cards
+            let visibleCount = 0;
+            document.querySelectorAll('.game-ticket').forEach(ticket => {
+                if (league === 'all') {
+                    ticket.style.display = 'flex';
+                    visibleCount++;
+                } else {
+                    const ticketLeague = ticket.getAttribute('data-league');
+                    if (ticketLeague === league) {
+                        ticket.style.display = 'flex';
+                        visibleCount++;
+                    } else {
+                        ticket.style.display = 'none';
+                    }
+                }
+            });
+
+            // Gerenciar layout se não houver jogos para a liga selecionada
+            const existingTempEmpty = document.querySelector('.temp-empty');
+            if (existingTempEmpty) existingTempEmpty.remove();
+
+            if (visibleCount === 0) {
+                const contentGames = document.getElementById('tab-content-games');
+                if (contentGames) {
+                    const grid = contentGames.querySelector('.games-grid');
+                    if (grid) grid.style.display = 'none';
+
+                    const noMatch = document.createElement('div');
+                    noMatch.className = 'empty-state temp-empty';
+                    noMatch.innerHTML = `
+                        <i class="fa-solid fa-calendar-xmark" style="font-size: 40px; color: rgba(124, 58, 237, 0.2); margin-bottom: 15px;"></i>
+                        <h3>Nenhuma Partida Encontrada</h3>
+                        <p>Não há jogos ativos cadastrados para esta categoria de liga esportiva no momento.</p>
+                    `;
+                    contentGames.appendChild(noMatch);
+                }
+            } else {
+                const contentGames = document.getElementById('tab-content-games');
+                if (contentGames) {
+                    const grid = contentGames.querySelector('.games-grid');
+                    if (grid) grid.style.display = 'grid';
+                }
+            }
         }
 
-        // Assistir Canal Direto
-        function playChannelIntegrated(channelId) {
-            const modal = document.getElementById('player-modal-integrated');
-            const iframe = document.getElementById('player-iframe-integrated');
-            iframe.src = 'player_embed.php?id=' + channelId;
+        // Abrir Jogo Grátis
+        function playMatch(gameId) {
+            const modal = document.getElementById('player-modal');
+            const iframe = document.getElementById('player-iframe');
+            
+            // Carrega assistir.php direto no iframe em modo simplificado
+            iframe.src = 'assistir.php?jogo=' + gameId + '&embed=1';
             modal.classList.add('active');
+            document.body.style.overflow = 'hidden';
         }
 
         // Fechar Modal
-        function closePlayerModalIntegrated(e) {
-            const modal = document.getElementById('player-modal-integrated');
-            const iframe = document.getElementById('player-iframe-integrated');
-            iframe.src = '';
+        function closePlayerModal(e) {
+            const modal = document.getElementById('player-modal');
+            const iframe = document.getElementById('player-iframe');
+            
+            iframe.src = ''; // Corta o áudio/vídeo imediatamente ao fechar
             modal.classList.remove('active');
+            document.body.style.overflow = '';
         }
     </script>
-</section>
-
-<?php
-// Incluir o Rodapé Premium
-require_once __DIR__ . '/includes/footer.php';
-?>
+</body>
+</html>

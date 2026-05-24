@@ -38,7 +38,7 @@ function initNavigation() {
     navItems.forEach(item => {
         item.addEventListener('click', (e) => {
             const tabId = item.getAttribute('data-tab');
-            if (!tabId) return; // Ignora e permite navegação normal para links sem data-tab (ex: jogos.php)
+            if (!tabId) return; // Ignora e permite navegação normal para links sem data-tab (ex: index.php)
             e.preventDefault();
             switchTab(tabId);
         });

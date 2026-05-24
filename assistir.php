@@ -488,6 +488,36 @@ if ($gameId > 0) {
             from { opacity: 0; transform: translateY(5px); }
             to { opacity: 1; transform: translateY(0); }
         }
+        /* Estilos Inteligentes de Incorporação (Embed) */
+        <?php if (isset($_GET['embed']) && $_GET['embed'] == '1'): ?>
+        .topbar, .game-details-card, .chat-sidebar {
+            display: none !important;
+        }
+        body {
+            background: #000 !important;
+            overflow: hidden !important;
+        }
+        .viewer-container {
+            display: block !important;
+            margin: 0 !important;
+            padding: 0 !important;
+            max-width: 100% !important;
+            width: 100vw !important;
+            height: 100vh !important;
+        }
+        .viewer-container > div {
+            width: 100% !important;
+            height: 100% !important;
+        }
+        .player-wrapper {
+            width: 100vw !important;
+            height: 100vh !important;
+            border: none !important;
+            border-radius: 0 !important;
+            aspect-ratio: auto !important;
+            box-shadow: none !important;
+        }
+        <?php endif; ?>
     </style>
 </head>
 <body>
@@ -552,20 +582,8 @@ if ($gameId > 0) {
                             </div>
                         </div>
                     <?php else: ?>
-                        <!-- Vídeo Transmissão Liberada (Grátis) -->
-                        <!-- Usar player simulado moderno com overlay retro e controle de vídeo -->
-                        <div class="paywall-overlay" style="background: transparent; z-index: 1;">
-                            <div style="background: rgba(0, 0, 0, 0.7); padding: 15px 30px; border-radius: 30px; border: 1px solid var(--color-purple); display: flex; align-items: center; gap: 15px;">
-                                <div class="spinner" style="width: 25px; height: 25px; border-width: 2px;"></div>
-                                <span style="font-size: 14px; font-weight: 600; color: #fff; letter-spacing: 0.5px;">Sintonizando Canal: <?php echo htmlspecialchars($game['channel_name']); ?>...</span>
-                            </div>
-                        </div>
-                        
-                        <!-- Usando vídeo padrão para demonstração local. Em produção carrega o stream_url -->
-                        <video class="video-player" poster="https://images.unsplash.com/photo-1508098682722-e99c43a406b2?q=80&w=1200" autoplay muted loop playsinline>
-                            <source src="https://assets.mixkit.co/videos/preview/mixkit-playing-football-under-the-rain-40660-large.mp4" type="video/mp4">
-                            Seu navegador não suporta vídeos HTML5.
-                        </video>
+                        <!-- Transmissão HLS/MPEGTS Real-Time Integrada (100% Sincronizada e Funcional) -->
+                        <iframe src="player_embed.php?id=<?php echo (int)$game['channel_id']; ?>" style="width: 100%; height: 100%; border: none; background: #000; display: block;" allow="autoplay; encrypted-media; picture-in-picture" allowfullscreen></iframe>
                     <?php endif; ?>
                 </div>
 
