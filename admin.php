@@ -825,6 +825,27 @@ require_once __DIR__ . '/includes/header.php';
                     </div>
                 </div>
 
+                <div class="form-group" style="margin-top: 25px;">
+                    <label class="form-label">Plano de Fundo do Banner (Página Inicial)</label>
+                    
+                    <div style="display: flex; align-items: center; gap: 20px; margin-bottom: 15px;">
+                        <div style="width: 160px; height: 90px; background: #000; border: 1px solid var(--border); border-radius: 8px; display: flex; align-items: center; justify-content: center; overflow: hidden;" id="preview-hero-container">
+                            <?php 
+                            $heroImg = $settings['hero_banner_image'] ?? 'assets/images/football_stars_hero.png';
+                            if ($heroImg !== '' && file_exists(__DIR__ . '/' . $heroImg)): 
+                            ?>
+                                <img src="<?php echo $heroImg; ?>?t=<?php echo time(); ?>" style="width: 100%; height: 100%; object-fit: cover;" id="preview-hero-img">
+                            <?php else: ?>
+                                <span style="font-size: 11px; color: var(--text-secondary);" id="preview-hero-placeholder">Sem Imagem</span>
+                            <?php endif; ?>
+                        </div>
+                        <div style="flex-grow: 1;">
+                            <input type="file" id="input_hero_banner_image" name="hero_banner_image" class="form-control" accept="image/*" onchange="previewHeroBannerImage(this)">
+                            <p style="font-size: 11px; color: var(--text-secondary); margin-top: 6px;">Esta imagem será o plano de fundo do banner na página inicial. Recomendamos tamanho 1920x600.</p>
+                        </div>
+                    </div>
+                </div>
+
                 <button type="submit" class="btn btn-accent" style="margin-top: 15px;">
                     <i class="fa-solid fa-save"></i> Salvar Configurações
                 </button>
@@ -839,6 +860,17 @@ require_once __DIR__ . '/includes/header.php';
                 reader.onload = function(e) {
                     var container = document.getElementById('preview-offline-container');
                     container.innerHTML = '<img src="' + e.target.result + '" style="width: 100%; height: 100%; object-fit: cover;" id="preview-offline-img">';
+                };
+                reader.readAsDataURL(input.files[0]);
+            }
+        }
+
+        function previewHeroBannerImage(input) {
+            if (input.files && input.files[0]) {
+                var reader = new FileReader();
+                reader.onload = function(e) {
+                    var container = document.getElementById('preview-hero-container');
+                    container.innerHTML = '<img src="' + e.target.result + '" style="width: 100%; height: 100%; object-fit: cover;" id="preview-hero-img">';
                 };
                 reader.readAsDataURL(input.files[0]);
             }

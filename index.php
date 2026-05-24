@@ -1,10 +1,15 @@
 <?php
 require_once __DIR__ . '/config/db.php';
 
-// Buscar Nome do Site
-$stmt = $pdo->prepare("SELECT meta_value FROM settings WHERE meta_key = 'site_name'");
-$stmt->execute();
-$siteName = $stmt->fetchColumn() ?: 'Arena Stream';
+// Buscar todas as configurações do sistema
+$stmt = $pdo->query("SELECT meta_key, meta_value FROM settings");
+$settingsList = $stmt->fetchAll(PDO::FETCH_ASSOC);
+$settings = [];
+foreach ($settingsList as $s) {
+    $settings[$s['meta_key']] = $s['meta_value'];
+}
+$siteName = $settings['site_name'] ?? 'Arena Stream';
+$heroBannerImage = $settings['hero_banner_image'] ?? 'assets/images/football_stars_hero.png';
 
 // Buscar Jogos Agendados Ativos
 $sqlGames = "SELECT g.*, c.name AS channel_name, c.logo AS channel_logo 
@@ -145,7 +150,7 @@ $channels = $pdo->query($sqlChannels)->fetchAll(PDO::FETCH_ASSOC);
             min-height: 580px;
             position: relative;
             background-image: linear-gradient(to right, #09121e 20%, rgba(9, 18, 30, 0.85) 45%, rgba(9, 18, 30, 0.3) 65%, rgba(9, 18, 30, 0.95) 100%),
-                              url('assets/images/football_stars_hero.png');
+                              url('<?php echo $heroBannerImage; ?>?t=<?php echo file_exists(__DIR__ . "/" . $heroBannerImage) ? filemtime(__DIR__ . "/" . $heroBannerImage) : time(); ?>');
             background-size: cover;
             background-position: right center;
             background-repeat: no-repeat;
@@ -323,7 +328,7 @@ $channels = $pdo->query($sqlChannels)->fetchAll(PDO::FETCH_ASSOC);
                 padding: 120px 20px 60px !important;
                 width: 100% !important;
                 background-image: linear-gradient(180deg, rgba(9, 18, 30, 0.95) 0%, rgba(9, 18, 30, 0.75) 50%, #09121e 100%),
-                                  url('assets/images/football_stars_hero.png');
+                                  url('<?php echo $heroBannerImage; ?>?t=<?php echo file_exists(__DIR__ . "/" . $heroBannerImage) ? filemtime(__DIR__ . "/" . $heroBannerImage) : time(); ?>');
                 background-position: center center;
             }
 
