@@ -95,7 +95,7 @@ function arenaFetchUrl(string $url, int $maxBytes = 0, bool $headOnly = false, b
     $opts[CURLOPT_HEADER] = true;
 
     if ($maxBytes === 0 && !$headOnly) {
-        $maxBytes = 300000; // Limite de ~300KB seguro para ler metadados sem inundar a memória
+        $maxBytes = 300000; // Teto seguro de ~300KB para ler cabeçalhos sem travar em vídeo contínuo
     }
 
     if ($headOnly) {
@@ -110,7 +110,7 @@ function arenaFetchUrl(string $url, int $maxBytes = 0, bool $headOnly = false, b
         curl_setopt($ch, CURLOPT_NOPROGRESS, false);
         curl_setopt($ch, CURLOPT_PROGRESSFUNCTION, static function($ch, $downloadSize, $downloaded) use ($maxBytes) {
             if ($downloaded > $maxBytes) {
-                return 1; // Interrompe o download do cURL imediatamente se for vídeo contínuo
+                return 1; // Aborta o cURL na hora se o servidor IPTV tentar enviar vídeo infinito na memória
             }
             return 0;
         });
