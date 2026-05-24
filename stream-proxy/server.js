@@ -130,7 +130,7 @@ function rewriteM3u8(body, baseUrl, channelId, tParam) {
                 const abs = new URL(trim, base).href;
                 const enc = encodeURIComponent(Buffer.from(abs).toString('base64'));
                 
-                // DETECÇÃO INTELIGENTE: Captura tanto extensões físicas quanto rotas dinâmicas de IPTV
+                // DETECÇÃO AMPLIADA: Identifica extensões físicas ou rotas de canais de IPTV ao vivo
                 const isVideoSegment = /\.(ts|mp4|m4s|aac|mp3|m4a)(\?|$)/i.test(trim) || 
                                        trim.includes('/ts') || 
                                        trim.includes('/live/') || 
