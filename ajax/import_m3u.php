@@ -168,11 +168,7 @@ function importM3uFromFile(PDO $pdo, string $filePath): array
 {
     dbClearChannels($pdo);
 
-    $sportsKeywords = [
-        'esporte', 'sport', 'espn', 'premiere', 'combate', 'futebol', 'dazn', 'champions',
-        'copa', 'tnt sports', 'cazetv', 'cazé', 'bandsports', 'fox sports', 'arena', 'gol',
-        'fc', 'telecine action', 'ufc', 'conmebol', 'libertadores', 'brasileirao', 'laliga', 'premier league',
-    ];
+    $sportsKeywords = [];
 
     $seenNameGroup = [];
     $seenUrl = [];
