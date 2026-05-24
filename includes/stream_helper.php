@@ -95,7 +95,7 @@ function arenaFetchUrl(string $url, int $maxBytes = 0, bool $headOnly = false, b
     $opts[CURLOPT_HEADER] = false;
 
     if ($maxBytes === 0 && !$headOnly) {
-        $maxBytes = 500000; // ~500 KB limit
+        $maxBytes = 300000; // ~300 KB limit
     }
 
     if ($headOnly) {

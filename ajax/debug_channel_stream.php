@@ -30,7 +30,7 @@ function dbgHttpGet(string $url, int $timeoutSec = 12, bool $useRange = false, i
 
     $body = '';
     $headersRaw = '';
-    $maxBytes = 300000; // ~300 KB teto de proteção
+    $maxBytes = 200000; // ~200 KB teto de proteção
 
     $opts[CURLOPT_HEADERFUNCTION] = static function ($ch, string $headerLine) use (&$headersRaw) {
         $headersRaw .= $headerLine;

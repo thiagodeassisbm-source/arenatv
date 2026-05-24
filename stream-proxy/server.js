@@ -100,12 +100,20 @@ function fetchPlaylist(targetUrl) {
                 headers: headersFor(targetUrl),
             },
             (res) => {
+                // Se não for uma playlist de texto (for um vídeo direto), não tenta acumular buffer infinito
+                const contentType = res.headers['content-type'] || '';
+                if (!contentType.includes('mpegurl') && !contentType.includes('m3u') && !contentType.includes('text')) {
+                    resolve({ status: res.statusCode, isVideoDirect: true, finalUrl: targetUrl, responseStream: res });
+                    return;
+                }
+
                 let data = '';
                 res.on('data', (c) => {
                     data += c;
-                    if (data.length > 600000) res.destroy();
+                    // Aumentado o teto seguro para playlists HLS legítimas extensas
+                    if (data.length > 5000000) res.destroy(); 
                 });
-                res.on('end', () => resolve({ status: res.statusCode, body: data, finalUrl: targetUrl }));
+                res.on('end', () => resolve({ status: res.statusCode, body: data, finalUrl: targetUrl, isVideoDirect: false }));
             }
         ).on('error', reject);
     });
@@ -121,6 +129,12 @@ function rewriteM3u8(body, baseUrl, channelId, tParam) {
             try {
                 const abs = new URL(trim, base).href;
                 const enc = encodeURIComponent(Buffer.from(abs).toString('base64'));
+                
+                // CRÍTICO: Se a linha for um segmento de vídeo (.ts, .mp4, m4s, aac, mp3), NÃO adiciona format=hls
+                if (/\.(ts|mp4|m4s|aac|mp3)(\?|$)/i.test(trim) || trim.includes('/ts')) {
+                    return `http://127.0.0.1:${PORT}/stream?id=${channelId}&t=${enc}&type=mpegts`;
+                }
+                
                 if (channelId) {
                     return `http://127.0.0.1:${PORT}/stream?id=${channelId}&t=${enc}&format=hls`;
                 }
@@ -165,6 +179,10 @@ const server = http.createServer(async (req, res) => {
     if (format === 'hls') {
         try {
             const pl = await fetchPlaylist(target);
+            if (pl.isVideoDirect) {
+                // Se o fetchPlaylist descobriu que era um link de vídeo direto disfarçado, faz o pipe direto
+                return pipeStream(target, req, res, pipeType === 'mpegts' ? 'mpegts' : null);
+            }
             if (pl.status >= 400) {
                 res.writeHead(pl.status, { 'Access-Control-Allow-Origin': '*' });
                 return res.end(`Playlist HTTP ${pl.status}`);
