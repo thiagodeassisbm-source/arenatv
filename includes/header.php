@@ -43,6 +43,10 @@
                     <i class="fa-solid fa-calendar-days"></i>
                     <span>Grade de Jogos</span>
                 </a>
+                <a href="#settings" class="nav-item" data-tab="settings">
+                    <i class="fa-solid fa-gears"></i>
+                    <span>Configurações</span>
+                </a>
                 <a href="index.php" target="_blank" class="nav-item">
                     <i class="fa-solid fa-globe"></i>
                     <span>Grade Pública (Portal)</span>

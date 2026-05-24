@@ -190,12 +190,22 @@ function dbBootstrapSqlite(PDO $pdo): void
         name TEXT NOT NULL,
         description TEXT,
         channel_id INTEGER,
+        game_date TEXT,
         price REAL DEFAULT 0,
         status TEXT DEFAULT 'ativo',
         external_link TEXT,
+        transmission_start TEXT,
+        transmission_end TEXT,
         created_at TEXT DEFAULT (datetime('now')),
         FOREIGN KEY (channel_id) REFERENCES channels(id) ON DELETE SET NULL
     )");
+
+    try {
+        $pdo->exec("ALTER TABLE games ADD COLUMN transmission_start TEXT");
+    } catch (PDOException $e) {}
+    try {
+        $pdo->exec("ALTER TABLE games ADD COLUMN transmission_end TEXT");
+    } catch (PDOException $e) {}
 
     $defaults = [
         ['site_name', 'Arena Stream - Venda de Jogos'],
@@ -302,6 +312,14 @@ function dbConnectionHint(Throwable $e): string
 
 try {
     $pdo = dbConnect();
+    if (!dbIsSqlite()) {
+        try {
+            $pdo->exec("ALTER TABLE games ADD COLUMN transmission_start DATETIME NULL");
+        } catch (PDOException $e) {}
+        try {
+            $pdo->exec("ALTER TABLE games ADD COLUMN transmission_end DATETIME NULL");
+        } catch (PDOException $e) {}
+    }
 } catch (Throwable $e) {
     header('HTTP/1.1 500 Internal Server Error');
     $hint = dbConnectionHint($e);

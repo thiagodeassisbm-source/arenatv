@@ -80,7 +80,7 @@ function initNavigation() {
 
     // Suporte ao hash da URL
     const hash = window.location.hash.substring(1);
-    if (hash && ['overview', 'import', 'channels', 'games', 'calendar'].includes(hash)) {
+    if (hash && ['overview', 'import', 'channels', 'games', 'calendar', 'settings'].includes(hash)) {
         switchTab(hash);
     }
 }
@@ -109,6 +109,10 @@ function updateHeaderTitle(tabId) {
         calendar: {
             title: 'Grade de Programação',
             subtitle: 'Grade de canais esportivos e calendário de partidas ativas.'
+        },
+        settings: {
+            title: 'Configurações do Sistema',
+            subtitle: 'Gerencie opções de lista e imagem de encerramento da transmissão.'
         }
     };
 
@@ -884,6 +888,16 @@ function renderGamesList(gamesList) {
             `<div class="game-ticket-date" style="font-size: 11px; color: var(--color-purple-light); font-weight: 700; margin-bottom: 8px; display: flex; align-items: center; gap: 6px;"><i class="fa-solid fa-calendar-days"></i> ${formatDateTime(game.game_date)}</div>` : 
             '';
 
+        let transmissionTimesHtml = '';
+        if (game.transmission_start || game.transmission_end) {
+            transmissionTimesHtml = `
+                <div style="display: flex; flex-wrap: wrap; gap: 10px; margin-bottom: 8px; font-size: 11px; color: var(--text-secondary);">
+                    ${game.transmission_start ? `<span><i class="fa-solid fa-lock-open" style="color: var(--color-success);"></i> ${formatDateTime(game.transmission_start)}</span>` : ''}
+                    ${game.transmission_end ? `<span><i class="fa-solid fa-lock" style="color: var(--color-red);"></i> ${formatDateTime(game.transmission_end)}</span>` : ''}
+                </div>
+            `;
+        }
+
         ticket.innerHTML = `
             <div class="game-ticket-main">
                 <div class="game-ticket-channel">
@@ -894,6 +908,7 @@ function renderGamesList(gamesList) {
                 </div>
                 <div class="game-ticket-title" title="${game.name}">${game.name}</div>
                 ${dateHtml}
+                ${transmissionTimesHtml}
                 <div class="game-ticket-desc">${game.description}</div>
                 <div class="game-ticket-footer">
                     <span class="game-price-tag">${formattedPrice}</span>
@@ -1011,6 +1026,8 @@ window.editGame = function(id) {
     document.getElementById('game_description').value = game.description;
     document.getElementById('game_channel_id').value = game.channel_id;
     document.getElementById('game_date').value = game.game_date ? game.game_date.replace(' ', 'T').substring(0, 16) : '';
+    document.getElementById('transmission_start').value = game.transmission_start ? game.transmission_start.replace(' ', 'T').substring(0, 16) : '';
+    document.getElementById('transmission_end').value = game.transmission_end ? game.transmission_end.replace(' ', 'T').substring(0, 16) : '';
     
     // Formatar preço para o form
     const priceStr = parseFloat(game.price).toFixed(2).replace('.', ',');

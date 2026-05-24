@@ -963,6 +963,27 @@ $channels = $pdo->query($sqlChannels)->fetchAll(PDO::FETCH_ASSOC);
                                 <p class="match-desc"><?php echo nl2br(htmlspecialchars($game['description'])); ?></p>
                             </div>
                             
+                            <?php
+                            // Checar janelas de tempo de transmissão
+                            $transmissionStarted = true;
+                            $transmissionEnded = false;
+                            $now = new DateTime();
+
+                            if (!empty($game['transmission_start'])) {
+                                $startDate = new DateTime($game['transmission_start']);
+                                if ($now < $startDate) {
+                                    $transmissionStarted = false;
+                                }
+                            }
+                            
+                            if (!empty($game['transmission_end'])) {
+                                $endDate = new DateTime($game['transmission_end']);
+                                if ($now > $endDate) {
+                                    $transmissionEnded = true;
+                                }
+                            }
+                            ?>
+                            
                             <div class="ticket-footer">
                                 <div class="price-box">
                                     <span class="price-label">Ingresso</span>
@@ -973,7 +994,15 @@ $channels = $pdo->query($sqlChannels)->fetchAll(PDO::FETCH_ASSOC);
                                     <?php endif; ?>
                                 </div>
                                 
-                                <?php if ($game['price'] > 0): ?>
+                                <?php if (!$transmissionStarted): ?>
+                                    <button class="btn-ticket" style="background: rgba(255,255,255,0.05); color: var(--text-secondary); border: 1px solid rgba(255,255,255,0.08); cursor: not-allowed;" disabled>
+                                        <i class="fa-solid fa-lock" style="color: var(--color-red);"></i> Aguardando Início
+                                    </button>
+                                <?php elseif ($transmissionEnded): ?>
+                                    <button class="btn-ticket" style="background: rgba(255,255,255,0.05); color: var(--text-secondary); border: 1px solid rgba(255,255,255,0.08); cursor: not-allowed;" disabled>
+                                        <i class="fa-solid fa-circle-minus" style="color: var(--text-secondary);"></i> Encerrada
+                                    </button>
+                                <?php elseif ($game['price'] > 0): ?>
                                     <a href="assistir.php?jogo=<?php echo $game['id']; ?>" class="btn-ticket buy">
                                         <i class="fa-solid fa-ticket"></i> Adquirir Acesso
                                     </a>

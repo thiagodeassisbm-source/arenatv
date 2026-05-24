@@ -18,6 +18,8 @@ try {
     $status = isset($_POST['status']) ? trim($_POST['status']) : 'ativo';
     $external_link = isset($_POST['external_link']) ? trim($_POST['external_link']) : '';
     $game_date = isset($_POST['game_date']) && $_POST['game_date'] !== '' ? trim($_POST['game_date']) : null;
+    $transmission_start = isset($_POST['transmission_start']) && $_POST['transmission_start'] !== '' ? trim($_POST['transmission_start']) : null;
+    $transmission_end = isset($_POST['transmission_end']) && $_POST['transmission_end'] !== '' ? trim($_POST['transmission_end']) : null;
 
     // Validação básica
     if (empty($name)) {
@@ -40,13 +42,13 @@ try {
 
     if ($id > 0) {
         // Modo Edição
-        $stmt = $pdo->prepare("UPDATE games SET name = ?, description = ?, channel_id = ?, game_date = ?, price = ?, status = ?, external_link = ? WHERE id = ?");
-        $stmt->execute([$name, $description, $channel_id, $game_date, $price, $status, $external_link, $id]);
+        $stmt = $pdo->prepare("UPDATE games SET name = ?, description = ?, channel_id = ?, game_date = ?, price = ?, status = ?, external_link = ?, transmission_start = ?, transmission_end = ? WHERE id = ?");
+        $stmt->execute([$name, $description, $channel_id, $game_date, $price, $status, $external_link, $transmission_start, $transmission_end, $id]);
         $message = "Jogo editado com sucesso!";
     } else {
         // Modo Criação
-        $stmt = $pdo->prepare("INSERT INTO games (name, description, channel_id, game_date, price, status, external_link) VALUES (?, ?, ?, ?, ?, ?, ?)");
-        $stmt->execute([$name, $description, $channel_id, $game_date, $price, $status, $external_link]);
+        $stmt = $pdo->prepare("INSERT INTO games (name, description, channel_id, game_date, price, status, external_link, transmission_start, transmission_end) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)");
+        $stmt->execute([$name, $description, $channel_id, $game_date, $price, $status, $external_link, $transmission_start, $transmission_end]);
         $id = $pdo->lastInsertId();
         $message = "Jogo cadastrado para venda com sucesso!";
     }

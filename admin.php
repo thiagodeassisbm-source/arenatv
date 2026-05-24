@@ -7,10 +7,14 @@ $totalChannels = $pdo->query("SELECT COUNT(*) FROM channels")->fetchColumn();
 $sportsChannels = $pdo->query("SELECT COUNT(*) FROM channels WHERE is_sports = 1")->fetchColumn();
 $totalGames = $pdo->query("SELECT COUNT(*) FROM games")->fetchColumn();
 
-// Buscar URL M3U salva
-$stmt = $pdo->prepare("SELECT meta_value FROM settings WHERE meta_key = 'm3u_url'");
-$stmt->execute();
-$m3uUrl = $stmt->fetchColumn() ?: '';
+// Buscar todas as configurações
+$stmt = $pdo->query("SELECT meta_key, meta_value FROM settings");
+$settingsList = $stmt->fetchAll(PDO::FETCH_ASSOC);
+$settings = [];
+foreach ($settingsList as $s) {
+    $settings[$s['meta_key']] = $s['meta_value'];
+}
+$m3uUrl = $settings['m3u_url'] ?? '';
 
 // Buscar Jogos Agendados Ativos para a Grade
 $sqlGames = "SELECT g.*, c.name AS channel_name, c.logo AS channel_logo 
@@ -246,7 +250,20 @@ require_once __DIR__ . '/includes/header.php';
                     <div class="form-group">
                         <label class="form-label" for="game_date">Data e Hora do Jogo *</label>
                         <input type="datetime-local" id="game_date" name="game_date" class="form-control" required>
-                        <p style="font-size: 11px; color: var(--text-secondary); margin-top: 6px;">Escolha o dia e o horário em que a transmissão começará.</p>
+                        <p style="font-size: 11px; color: var(--text-secondary); margin-top: 6px;">Escolha o dia e o horário em que o jogo ocorrerá.</p>
+                    </div>
+
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 20px;">
+                        <div class="form-group" style="margin-bottom: 0;">
+                            <label class="form-label" for="transmission_start">Liberar Transmissão *</label>
+                            <input type="datetime-local" id="transmission_start" name="transmission_start" class="form-control" required>
+                            <p style="font-size: 10px; color: var(--text-secondary); margin-top: 4px;">Horário em que o play fica ativo.</p>
+                        </div>
+                        <div class="form-group" style="margin-bottom: 0;">
+                            <label class="form-label" for="transmission_end">Bloquear Transmissão *</label>
+                            <input type="datetime-local" id="transmission_end" name="transmission_end" class="form-control" required>
+                            <p style="font-size: 10px; color: var(--text-secondary); margin-top: 4px;">Horário em que o player bloqueia.</p>
+                        </div>
                     </div>
 
                     <div class="form-group">
@@ -770,6 +787,89 @@ require_once __DIR__ . '/includes/header.php';
             const iframe = document.getElementById('player-iframe-integrated');
             iframe.src = '';
             modal.classList.remove('active');
+        }
+    </script>
+</section>
+
+<!-- 6. ABA: CONFIGURAÇÕES -->
+<section id="tab-settings" class="tab-content">
+    <div class="card">
+        <div class="card-header">
+            <h2><i class="fa-solid fa-gears"></i> Configurações do Sistema</h2>
+        </div>
+        <div class="card-body">
+            <form id="form-settings" onsubmit="saveSettings(event)" enctype="multipart/form-data">
+                <div class="form-group">
+                    <label class="form-label" for="setting_site_name">Nome da Plataforma</label>
+                    <input type="text" id="setting_site_name" name="site_name" class="form-control" value="<?php echo htmlspecialchars($settings['site_name'] ?? 'Arena Stream'); ?>" required>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Imagem de Encerramento da Transmissão (Tela Bloqueada)</label>
+                    
+                    <div style="display: flex; align-items: center; gap: 20px; margin-bottom: 15px;">
+                        <div style="width: 160px; height: 90px; background: #000; border: 1px solid var(--border); border-radius: 8px; display: flex; align-items: center; justify-content: center; overflow: hidden;" id="preview-offline-container">
+                            <?php 
+                            $offlineImg = $settings['offline_image'] ?? 'assets/images/transmission_ended.png';
+                            if ($offlineImg !== '' && file_exists(__DIR__ . '/' . $offlineImg)): 
+                            ?>
+                                <img src="<?php echo $offlineImg; ?>?t=<?php echo time(); ?>" style="width: 100%; height: 100%; object-fit: cover;" id="preview-offline-img">
+                            <?php else: ?>
+                                <span style="font-size: 11px; color: var(--text-secondary);" id="preview-offline-placeholder">Sem Imagem</span>
+                            <?php endif; ?>
+                        </div>
+                        <div style="flex-grow: 1;">
+                            <input type="file" id="input_offline_image" name="offline_image" class="form-control" accept="image/*" onchange="previewOfflineImage(this)">
+                            <p style="font-size: 11px; color: var(--text-secondary); margin-top: 6px;">Esta imagem será exibida para o usuário caso a transmissão já tenha encerrado. Recomendamos tamanho 1280x720 (16:9).</p>
+                        </div>
+                    </div>
+                </div>
+
+                <button type="submit" class="btn btn-accent" style="margin-top: 15px;">
+                    <i class="fa-solid fa-save"></i> Salvar Configurações
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        function previewOfflineImage(input) {
+            if (input.files && input.files[0]) {
+                var reader = new FileReader();
+                reader.onload = function(e) {
+                    var container = document.getElementById('preview-offline-container');
+                    container.innerHTML = '<img src="' + e.target.result + '" style="width: 100%; height: 100%; object-fit: cover;" id="preview-offline-img">';
+                };
+                reader.readAsDataURL(input.files[0]);
+            }
+        }
+
+        function saveSettings(e) {
+            e.preventDefault();
+            const form = document.getElementById('form-settings');
+            const formData = new FormData(form);
+            
+            showToast('Salvando configurações...', 'info');
+            
+            fetch('ajax/save_settings.php', {
+                method: 'POST',
+                body: formData
+            })
+            .then(res => res.json())
+            .then(data => {
+                if (data.success) {
+                    showToast(data.message, 'success');
+                    setTimeout(() => {
+                        window.location.reload();
+                    }, 1000);
+                } else {
+                    showToast(data.error || 'Erro ao salvar configurações.', 'error');
+                }
+            })
+            .catch(err => {
+                showToast('Erro de rede ao salvar configurações.', 'error');
+                console.error(err);
+            });
         }
     </script>
 </section>

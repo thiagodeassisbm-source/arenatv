@@ -1,9 +1,20 @@
 <?php
 require_once __DIR__ . '/config/db.php';
 
+// Buscar todas as configurações
+$stmt = $pdo->query("SELECT meta_key, meta_value FROM settings");
+$settingsList = $stmt->fetchAll(PDO::FETCH_ASSOC);
+$settings = [];
+foreach ($settingsList as $s) {
+    $settings[$s['meta_key']] = $s['meta_value'];
+}
+
 // Validar ID do jogo
 $gameId = isset($_GET['jogo']) ? intval($_GET['jogo']) : 0;
 $game = null;
+$transmissionStarted = true;
+$transmissionEnded = false;
+$now = new DateTime();
 
 if ($gameId > 0) {
     $stmt = $pdo->prepare("SELECT g.*, c.name AS channel_name, c.logo AS channel_logo, c.url AS stream_url 
@@ -12,6 +23,22 @@ if ($gameId > 0) {
                             WHERE g.id = ? AND g.status = 'ativo'");
     $stmt->execute([$gameId]);
     $game = $stmt->fetch();
+    
+    if ($game) {
+        if (!empty($game['transmission_start'])) {
+            $startDate = new DateTime($game['transmission_start']);
+            if ($now < $startDate) {
+                $transmissionStarted = false;
+            }
+        }
+        
+        if (!empty($game['transmission_end'])) {
+            $endDate = new DateTime($game['transmission_end']);
+            if ($now > $endDate) {
+                $transmissionEnded = true;
+            }
+        }
+    }
 }
 ?>
 <!DOCTYPE html>
@@ -551,7 +578,35 @@ if ($gameId > 0) {
             <!-- Coluna Esquerda: Player e Detalhes -->
             <div>
                 <div class="player-wrapper">
-                    <?php if ($game['price'] > 0): ?>
+                    <?php if (!$transmissionStarted): ?>
+                        <!-- Bloqueio: Transmissão Não Iniciada -->
+                        <div class="paywall-overlay" style="background: radial-gradient(circle at center, rgba(14, 8, 34, 0.97) 0%, rgba(7, 4, 14, 0.99) 100%);">
+                            <div class="ticket-box" style="border-color: rgba(124, 58, 237, 0.35); max-width: 440px;">
+                                <div style="font-size: 36px; color: var(--color-purple-light); margin-bottom: 12px;">
+                                    <i class="fa-solid fa-lock"></i>
+                                </div>
+                                <h3 class="ticket-title" style="font-size: 20px; font-weight: 800; background: linear-gradient(135deg, #fff, var(--color-purple-light)); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">Transmissão Agendada</h3>
+                                <p class="ticket-desc" style="font-size: 13px; color: var(--text-secondary); margin-bottom: 20px; line-height: 1.5;">Esta transmissão ainda não foi liberada. O acesso completo ao player de vídeo será aberto automaticamente no horário definido.</p>
+                                <div style="background: rgba(124, 58, 237, 0.08); border: 1px solid rgba(124, 58, 237, 0.15); padding: 12px; border-radius: 10px; font-size: 14px; font-weight: 700; color: #fff; margin-bottom: 10px; display: inline-flex; align-items: center; justify-content: center; gap: 8px;">
+                                    <i class="fa-solid fa-calendar-days" style="color: var(--color-purple-light);"></i> Liberação: <?php echo date('d/m/Y \à\s H:i', strtotime($game['transmission_start'])); ?>
+                                </div>
+                            </div>
+                        </div>
+                    <?php elseif ($transmissionEnded): ?>
+                        <!-- Bloqueio: Transmissão Encerrada -->
+                        <?php 
+                        $offlineImg = $settings['offline_image'] ?? 'assets/images/transmission_ended.png'; 
+                        ?>
+                        <div class="paywall-overlay" style="background: #000; padding: 0; display: block; overflow: hidden; position: relative;">
+                            <img src="<?php echo $offlineImg; ?>" style="width: 100%; height: 100%; object-fit: cover;" alt="Transmissão Encerrada">
+                            <!-- Overlay escuro suave superior com botão voltar -->
+                            <div style="position: absolute; bottom: 20px; left: 50%; transform: translateX(-50%); z-index: 15; width: 90%; max-width: 320px; text-align: center;">
+                                <a href="index.php" class="btn-buy" style="background: rgba(22, 14, 43, 0.95); border: 1px solid rgba(255, 255, 255, 0.1); backdrop-filter: blur(10px); text-decoration: none; padding: 10px 20px; font-size: 13px; font-weight: 700; border-radius: 8px; box-shadow: 0 4px 15px rgba(0,0,0,0.5);">
+                                    <i class="fa-solid fa-arrow-left"></i> Voltar ao Menu de Jogos
+                                </a>
+                            </div>
+                        </div>
+                    <?php elseif ($game['price'] > 0): ?>
                         <!-- Bloqueio de Pagamento (Paywall) -->
                         <div class="paywall-overlay">
                             <div class="ticket-box">

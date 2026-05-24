@@ -36,6 +36,8 @@ CREATE TABLE IF NOT EXISTS `games` (
   `price` DECIMAL(10, 2) DEFAULT 0.00,
   `status` VARCHAR(50) DEFAULT 'ativo',
   `external_link` VARCHAR(500) NULL,
+  `transmission_start` DATETIME NULL,
+  `transmission_end` DATETIME NULL,
   `created_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
   FOREIGN KEY (`channel_id`) REFERENCES `channels`(`id`) ON DELETE SET NULL ON UPDATE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
