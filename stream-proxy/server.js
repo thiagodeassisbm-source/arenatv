@@ -12,10 +12,15 @@ const UA = 'VLC/3.0.20 LibVLC/3.0.20';
 function decodeTarget(encoded) {
     if (!encoded) return null;
     try {
-        const clean = decodeURIComponent(encoded).replace(/ /g, '+');
+        let clean = decodeURIComponent(encoded).replace(/ /g, '+');
+        while (clean.length % 4 !== 0) {
+            clean += '=';
+        }
         const raw = Buffer.from(clean, 'base64').toString('utf8');
         if (/^https?:\/\//i.test(raw)) return raw;
-    } catch (e) { /* ignore */ }
+    } catch (e) {
+        console.error("[Proxy Node] Erro ao decodificar URL:", e.message);
+    }
     return null;
 }
 

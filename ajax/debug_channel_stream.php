@@ -19,26 +19,48 @@ function dbgHttpGet(string $url, int $timeoutSec = 12, bool $useRange = false, i
     $ch = curl_init($url);
     $opts = arenaStreamCurlOpts($url);
     $opts[CURLOPT_URL] = $url;
-    $opts[CURLOPT_RETURNTRANSFER] = true;
-    $opts[CURLOPT_HEADER] = true;
+    $opts[CURLOPT_RETURNTRANSFER] = false;
+    $opts[CURLOPT_HEADER] = false;
     $opts[CURLOPT_TIMEOUT] = $timeoutSec;
     $opts[CURLOPT_CONNECTTIMEOUT] = 8;
+
     if ($useRange) {
         $opts[CURLOPT_RANGE] = '0-' . ($rangeBytes - 1);
     }
+
+    $body = '';
+    $headersRaw = '';
+    $maxBytes = 300000; // ~300 KB teto de proteção
+
+    $opts[CURLOPT_HEADERFUNCTION] = static function ($ch, string $headerLine) use (&$headersRaw) {
+        $headersRaw .= $headerLine;
+        return strlen($headerLine);
+    };
+
+    $opts[CURLOPT_WRITEFUNCTION] = static function ($ch, string $chunk) use (&$body, $maxBytes) {
+        $body .= $chunk;
+        if (strlen($body) >= $maxBytes) {
+            return 0; // Aborta download controlado
+        }
+        return strlen($chunk);
+    };
+
     curl_setopt_array($ch, $opts);
     $t0 = microtime(true);
-    $raw = curl_exec($ch);
+    $ok = curl_exec($ch);
     $ms = (int) round((microtime(true) - $t0) * 1000);
     $err = curl_error($ch);
     $info = curl_getinfo($ch);
     curl_close($ch);
 
-    if ($raw === false) {
+    if ($ok === false && !empty($body)) {
+        $ok = true;
+    }
+
+    if ($ok === false) {
         return ['ok' => false, 'error' => $err ?: 'curl falhou', 'ms' => $ms, 'info' => $info];
     }
-    $headerSize = (int) ($info['header_size'] ?? 0);
-    $body = substr($raw, $headerSize);
+
     return [
         'ok' => true,
         'ms' => $ms,
@@ -49,10 +71,10 @@ function dbgHttpGet(string $url, int $timeoutSec = 12, bool $useRange = false, i
         'body_len' => strlen($body),
         'body_hex' => bin2hex(substr($body, 0, 16)),
         'body_preview' => substr(preg_replace('/[^\x20-\x7E\r\n]/', '.', $body), 0, 200),
-        'is_m3u8' => str_starts_with(ltrim($body), '#EXTM3U'),
+        'is_m3u8' => (strncmp(ltrim($body), '#EXTM3U', 7) === 0),
         'is_mp4' => strlen($body) >= 8 && substr($body, 4, 4) === 'ftyp',
         'is_ts' => strlen($body) > 0 && ord($body[0]) === 0x47,
-        'is_html' => str_contains(strtolower($info['content_type'] ?? ''), 'text/html') || str_starts_with(ltrim($body), '<'),
+        'is_html' => str_contains(strtolower($info['content_type'] ?? ''), 'text/html') || (strncmp(ltrim($body), '<', 1) === 0),
     ];
 }
 
